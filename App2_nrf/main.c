@@ -172,7 +172,7 @@ void vInterruptInit (void)
 }
 
 /*DW1000 config function*/
-static dwt_config_t config = {
+static dwt_config_t example_init_config = {
     5,                /* Channel number. */
     DWT_PRF_64M,      /* Pulse repetition frequency. */
     DWT_PLEN_128,     /* Preamble length. Used in TX only. */
@@ -185,6 +185,66 @@ static dwt_config_t config = {
     (129 + 8 - 8)     /* SFD timeout (preamble length + 1 + SFD length - PAC size). Used in RX only. */
 };
 
+#if 1 //for testing with the init-resp example
+/* Preamble timeout, in multiple of PAC size. See NOTE 3 below. */
+#define PRE_TIMEOUT 1000
+
+/* Delay between frames, in UWB microseconds. See NOTE 1 below. */
+#define POLL_TX_TO_RESP_RX_DLY_UUS 100 
+
+/*Should be accurately calculated during calibration*/
+#define TX_ANT_DLY 16300
+#define RX_ANT_DLY 16456	
+uint32 inittestapplication(uint8 s1switch)
+{
+    uint32 devID = 0;
+      /* Setup NRF52832 interrupt on GPIO 25 : connected to DW1000 IRQ*/
+  vInterruptInit();
+	
+  /*Initialization UART*/
+  boUART_Init ();
+  printf("Singled Sided Two Way Ranging Initiator with Interrupt Example \r\n");
+	
+  /* Reset DW1000 */
+  reset_DW1000(); 
+
+  /* Set SPI clock to 2MHz */
+  port_set_dw1000_slowrate();			
+  
+  /* Init the DW1000 */
+  if (dwt_initialise(DWT_LOADUCODE) == DWT_ERROR)
+  {
+    //Init of DW1000 Failed
+    while (1) {};
+  }
+
+  // Set SPI to 8MHz clock  
+  port_set_dw1000_fastrate();
+
+  /* Configure DW1000. */
+  dwt_configure(&example_init_config);
+
+  /* Initialization of the DW1000 interrupt*/
+  /* Callback are defined in ss_init_main.c */
+  dwt_setcallbacks(instance_cbTxDone, instance_cbRxOk, instance_cbRxTo, instance_cbRxErr); //ERWIN dwt_setcallbacks(&tx_conf_cb, &rx_ok_cb, &rx_to_cb, &rx_err_cb);
+
+  /* Enable wanted interrupts (TX confirmation, RX good frames, RX timeouts and RX errors). */
+  dwt_setinterrupt(DWT_INT_TFRS | DWT_INT_RFCG | DWT_INT_RFTO | DWT_INT_RXPTO | DWT_INT_RPHE | DWT_INT_RFCE | DWT_INT_RFSL | DWT_INT_SFDT, 1);
+
+  /* Apply default antenna delay value. See NOTE 2 below. */
+  dwt_setrxantennadelay(RX_ANT_DLY);
+  dwt_settxantennadelay(TX_ANT_DLY);
+
+  /* Set preamble timeout for expected frames. See NOTE 3 below. */
+  //dwt_setpreambledetecttimeout(0); // PRE_TIMEOUT
+          
+  /* Set expected response's delay and timeout. 
+  * As this example only handles one incoming frame with always the same delay and timeout, those values can be set here once for all. */
+  dwt_setrxaftertxdelay(POLL_TX_TO_RESP_RX_DLY_UUS);
+  dwt_setrxtimeout(65000); // Maximum value timeout with DW1000 is 65ms  
+    return devID;
+}
+#else
 uint32 inittestapplication(uint8 s1switch)
 {
     uint32 devID ;
@@ -523,7 +583,7 @@ uint32 inittestapplication(uint8 s1switch)
 
     instance_data[0].finalTxTimeIdx = RRXT0+(5*max_numAnchTwr);
     instance_data[0].twrFinalMsgLen = 1+1+5+(5*max_numAnchTwr)+5+2;
-
+ 
     instance_config(&uwbPhyConfig, &sfConfigTwr) ;                  // Set operating channel etc
 
     // initialize init state
@@ -561,6 +621,7 @@ uint32 inittestapplication(uint8 s1switch)
 
     return devID;
 }
+#endif
 
 /**
 **===========================================================================
@@ -825,7 +886,7 @@ static dwt_config_t config = {
 
 #define LED_TASK_DELAY        2000           /**< Task delay. Delays a LED0 task for 200 ms */
 #define BUZZER_TASK_DELAY 1000
-#define MAIN_TASK_DELAY 500
+#define MAIN_TASK_DELAY 250
 
 #ifdef USE_FREERTOS
 
@@ -850,19 +911,6 @@ static void led_toggle_task_function (void * pvParameter)
   {
     //LEDS_INVERT(BSP_LED_0_MASK);
     /* Delay a task for a given number of ticks */
-    if (rx_ok_counter > 0)
-    {
-      LEDS_ON(BSP_LED_0_MASK);
-    }
-    if (rx_error_counter > 0)
-    {
-      LEDS_ON(BSP_LED_1_MASK);
-    }
-    if (rx_timeout_counter > 0)
-    {
-      LEDS_ON(BSP_LED_2_MASK);
-    }
-
     vTaskDelay(LED_TASK_DELAY);
     /* Tasks must be implemented to never return... */
   }
@@ -912,6 +960,167 @@ static void buzzer_task_function (void * pvParameter)
  * @fn      main()
  * @brief   main entry point
 **/
+
+#if 1 //test code for init-resp example
+
+/* Frames used in the ranging process. See NOTE 1,2 below. */
+static uint8 tx_poll_msg[] = {0x41, 0x88, 0, 0xCA, 0xDE, 'W', 'A', 'V', 'E', 0xE0, 0, 0};
+static uint8 rx_resp_msg[] = {0x41, 0x88, 0, 0xCA, 0xDE, 'V', 'E', 'W', 'A', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+/* Length of the common part of the message (up to and including the function code, see NOTE 1 below). */
+#define ALL_MSG_COMMON_LEN 10
+/* Indexes to access some of the fields in the frames defined above. */
+#define ALL_MSG_SN_IDX 2
+#define RESP_MSG_POLL_RX_TS_IDX 10
+#define RESP_MSG_RESP_TX_TS_IDX 14
+#define RESP_MSG_TS_LEN 4
+/* Frame sequence number, incremented after each transmission. */
+static uint8 frame_seq_nb = 0;
+/* Buffer to store received response message.
+* Its size is adjusted to longest frame that this example code is supposed to handle. */
+#define RX_BUF_LEN 20
+static uint8 rx_buffer[RX_BUF_LEN];
+/*Transactions Counters */
+static volatile int tx_count = 0 ; // Successful transmit counter
+static volatile int rx_count = 0 ; // Successful receive counter
+/* Hold copies of computed time of flight and distance here for reference so that it can be examined at a debug breakpoint. */
+static double tof;
+static double distance;
+/* Speed of light in air, in metres per second. */
+#define SPEED_OF_LIGHT 299702547
+#endif
+/*! ------------------------------------------------------------------------------------------------------------------
+* @fn main()
+*
+* @brief Application entry point.
+*
+* @param  none
+*
+* @return none
+*/
+static void resp_msg_get_ts(uint8 *ts_field, uint32 *ts)
+{
+  int i;
+  *ts = 0;
+  for (i = 0; i < RESP_MSG_TS_LEN; i++)
+  {
+  *ts += ts_field[i] << (i * 8);
+  }
+}
+void test_init_run(void)
+{
+
+  /* Loop forever initiating ranging exchanges. */
+
+
+  /* Write frame data to DW1000 and prepare transmission. See NOTE 3 below. */
+  tx_poll_msg[ALL_MSG_SN_IDX] = frame_seq_nb;
+  dwt_writetxdata(sizeof(tx_poll_msg), tx_poll_msg, 0); /* Zero offset in TX buffer. */
+  dwt_writetxfctrl(sizeof(tx_poll_msg), 0, 1); /* Zero offset in TX buffer, ranging. */
+
+  /* Start transmission, indicating that a response is expected so that reception is enabled automatically after the frame is sent and the delay
+  * set by dwt_setrxaftertxdelay() has elapsed. */
+  dwt_starttx(DWT_START_TX_IMMEDIATE | DWT_RESPONSE_EXPECTED);
+
+  /*Waiting for transmission success flag*/
+  while (!(tx_ok_counter))
+  {};
+
+  if (tx_ok_counter)
+  {
+    tx_count++;
+    printf("Transmission # : %d\r\n",tx_count);
+
+    /*Reseting tx interrupt flag*/
+    tx_ok_counter = 0 ;
+  }
+
+  /* Wait for reception, timeout or error interrupt flag*/
+  while (!(rx_ok_counter || rx_timeout_counter|| rx_error_counter))
+  {};
+
+    if (rx_ok_counter > 0)
+    {
+      LEDS_INVERT(BSP_LED_0_MASK);
+    }
+    if (rx_error_counter > 0)
+    {
+      LEDS_INVERT(BSP_LED_1_MASK);
+    }
+    if (rx_timeout_counter > 0)
+    {
+      LEDS_INVERT(BSP_LED_2_MASK);
+    }
+
+  /* Increment frame sequence number after transmission of the poll message (modulo 256). */
+  frame_seq_nb++;
+
+  if (rx_ok_counter)
+  {		
+    uint32 frame_len;
+#if 1
+    /* A frame has been received, read it into the local buffer. */
+    frame_len = dwt_read32bitreg(RX_FINFO_ID) & RX_FINFO_RXFLEN_MASK;
+    if (frame_len <= RX_BUF_LEN)
+    {
+      dwt_readrxdata(rx_buffer, frame_len, 0);
+    }
+
+    /* Check that the frame is the expected response from the companion "SS TWR responder" example.
+    * As the sequence number field of the frame is not relevant, it is cleared to simplify the validation of the frame. */
+    rx_buffer[ALL_MSG_SN_IDX] = 0;
+    if (memcmp(rx_buffer, rx_resp_msg, ALL_MSG_COMMON_LEN) == 0)
+    {	
+      rx_count++;
+      printf("Reception # : %d\r\n",rx_count);
+      float reception_rate = (float) rx_count / (float) tx_count * 100;
+      printf("Reception rate # : %f\r\n",reception_rate);
+      uint32 poll_tx_ts, resp_rx_ts, poll_rx_ts, resp_tx_ts;
+      int32 rtd_init, rtd_resp;
+      float clockOffsetRatio ;
+
+      /* Retrieve poll transmission and response reception timestamps. See NOTE 4 below. */
+      poll_tx_ts = dwt_readtxtimestamplo32();
+      resp_rx_ts = dwt_readrxtimestamplo32();
+
+      /* Read carrier integrator value and calculate clock offset ratio. See NOTE 6 below. */
+      clockOffsetRatio = dwt_readcarrierintegrator() * (FREQ_OFFSET_MULTIPLIER * HERTZ_TO_PPM_MULTIPLIER_CHAN_5 / 1.0e6) ;
+
+      /* Get timestamps embedded in response message. */
+      resp_msg_get_ts(&rx_buffer[RESP_MSG_POLL_RX_TS_IDX], &poll_rx_ts);
+      resp_msg_get_ts(&rx_buffer[RESP_MSG_RESP_TX_TS_IDX], &resp_tx_ts);
+
+      /* Compute time of flight and distance, using clock offset ratio to correct for differing local and remote clock rates */
+      rtd_init = resp_rx_ts - poll_tx_ts;
+      rtd_resp = resp_tx_ts - poll_rx_ts;
+
+      tof = ((rtd_init - rtd_resp * (1.0f - clockOffsetRatio)) / 2.0f) * DWT_TIME_UNITS; // Specifying 1.0f and 2.0f are floats to clear warning 
+      distance = tof * SPEED_OF_LIGHT;
+      printf("Distance : %f\r\n",distance);
+
+      /*Reseting receive interrupt flag*/
+      rx_ok_counter = 0; 
+    }
+#else
+      printf("Reception\r\n");
+      /*Reseting receive interrupt flag*/
+      rx_ok_counter = 0;
+#endif
+   }
+
+  if (rx_timeout_counter || rx_error_counter)
+  {
+    /* Reset RX to properly reinitialise LDE operation. */
+    dwt_rxreset();
+
+    /*Reseting interrupt flag*/
+    rx_timeout_counter = 0 ;
+    rx_error_counter = 0 ;
+  }
+
+    /* Execute a delay between ranging exchanges. */
+    //     deca_sleep(RNG_DELAY_MS);
+    //	return(1);
+}
 
 #pragma GCC optimize ("O3")
 static void main_task_function(void * pvParameter)
@@ -991,7 +1200,7 @@ static void main_task_function(void * pvParameter)
     phy_datarate = DWT_BR_6M8;
 #endif
 
-    nrf_drv_gpiote_in_event_disable(DW1000_IRQ); //ERWIN todo port_DisableEXT_IRQ(); //disable ScenSor IRQ until we configure the device
+    //ERWIN nrf_drv_gpiote_in_event_disable(DW1000_IRQ); //ERWIN todo port_DisableEXT_IRQ(); //disable ScenSor IRQ until we configure the device
 
     //run DecaRangeRTLS application for TREK
 
@@ -1185,7 +1394,9 @@ static void main_task_function(void * pvParameter)
     
     while(1)
     {
-
+#if 1 //test code with init-resp example
+        test_init_run();
+#else
     	n = 0;
         printf("main_loop\n");
 
@@ -1218,7 +1429,7 @@ static void main_task_function(void * pvParameter)
     		UpdateSettings = 0;
     	}
 
-#if 0 //ERWIN
+
     	if(send_tx_buff)
     	{
     		send_usbmessage(&tx_buff[0], tx_buff_length);
@@ -2061,9 +2272,6 @@ static void main_task_function(void * pvParameter)
 
 int main(void)
 {
-  /*Initialization UART*/
-  boUART_Init ();
-
   /* Setup some LEDs for debug Green, Blue, Red on DWM1001-DEV */
   LEDS_CONFIGURE(BSP_LED_0_MASK | BSP_LED_1_MASK | BSP_LED_2_MASK);
   LEDS_OFF(BSP_LED_0_MASK | BSP_LED_1_MASK | BSP_LED_2_MASK );

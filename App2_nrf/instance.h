@@ -75,6 +75,7 @@ extern "C" {
 extern volatile int rx_error_counter;
 extern volatile int rx_ok_counter;
 extern volatile int rx_timeout_counter;
+extern volatile int tx_ok_counter;
 
 /******************************************************************************************************************
 *******************************************************************************************************************
@@ -936,6 +937,13 @@ uint16 instancerxantdly(void);
 void copyRangeBiasTable(void);
 
 int instance_starttxtest(int framePeriod);
+
+//ERWIN for testing
+void instance_cbTxDone(const dwt_cb_data_t *txd);
+void instance_cbRxOk(const dwt_cb_data_t *rxd);
+void instance_cbRxTo(const dwt_cb_data_t *rxd);
+void instance_cbRxErr(const dwt_cb_data_t *rxd);
+
 #ifdef __cplusplus
 }
 #endif

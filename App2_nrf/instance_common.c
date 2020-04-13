@@ -25,7 +25,7 @@
 volatile int rx_error_counter = 0;
 volatile int rx_ok_counter = 0;
 volatile int rx_timeout_counter = 0;
-
+volatile int tx_ok_counter = 0;
 // -------------------------------------------------------------------------------------------------------------------
 //double inst_tdist[MAX_TAG_LIST_SIZE] ;
 //double inst_idist[MAX_ANCHOR_LIST_SIZE] ;
@@ -53,10 +53,10 @@ void ancprepareresponse(uint16 sourceAddress, uint8 srcAddr_index, uint8 fcode_i
   void instance_txcallback(const dwt_callback_data_t *txd); //ERWIN
   void instance_rxcallback(const dwt_callback_data_t *rxd); //ERWIN
 #endif
-void instance_cbTxDone(const dwt_cb_data_t *txd); //ERWIN
-void instance_cbRxOk(const dwt_cb_data_t *txd); //ERWIN
-void instance_cbRxTo(const dwt_cb_data_t *txd); //ERWIN
-void instance_cbRxErr(const dwt_cb_data_t *txd); //ERWIN
+//void instance_cbTxDone(const dwt_cb_data_t *txd); //ERWIN
+//void instance_cbRxOk(const dwt_cb_data_t *txd); //ERWIN
+//void instance_cbRxTo(const dwt_cb_data_t *txd); //ERWIN
+//void instance_cbRxErr(const dwt_cb_data_t *txd); //ERWIN
 //void ancprepareresponse2(uint16 sourceAddress, uint8 srcAddr_index, uint8 fcode_index, uint8 *frame);
 
 //int eventOutcount = 0;
@@ -811,6 +811,12 @@ void inst_processrxtimeout(instance_data_t *inst)
 // NB: This function is called from the (TX) interrupt handler
 //
 //ERWIN
+#if 1 //for testing with init-resp example
+void instance_cbTxDone(const dwt_cb_data_t *rxd)
+{
+  tx_ok_counter++;
+}
+#else
 #pragma GCC optimize ("O3")
 void instance_cbTxDone(const dwt_cb_data_t *txd)
 {
@@ -824,6 +830,7 @@ void instance_cbTxDone(const dwt_cb_data_t *txd)
 
 	if(txevent == DWT_SIG_TX_DONE)
 	{
+                tx_ok_counter++;
 		//uint64 txtimestamp = 0;
 
 		//NOTE - we can only get TX good (done) while here
@@ -895,7 +902,7 @@ void instance_cbTxDone(const dwt_cb_data_t *txd)
 
 	instance_data[instance].monitor = 0;
 }
-
+#endif
 #if 0 //ERWIN
 #pragma GCC optimize ("O3")
 void instance_txcallback(const dwt_callback_data_t *txd)
@@ -1440,6 +1447,12 @@ void ancprepareresponse(uint16 sourceAddress, uint8 srcAddr_index, uint8 fcode_i
  * once the immediate action is taken care of the event is queued up for application to process
  */
 //ERWIN
+#if 1 //for testing with init-resp example
+void instance_cbRxOk(const dwt_cb_data_t *rxd)
+{
+  rx_ok_counter++;
+}
+#else
 #pragma GCC optimize ("O3")
 void instance_cbRxOk(const dwt_cb_data_t *rxd)
 {
@@ -2326,7 +2339,14 @@ void instance_cbRxOk(const dwt_cb_data_t *rxd)
 			return;
 		}
 }
+#endif
 //ERWIN
+#if 1 //for testing with init-resp example
+void instance_cbRxTo(const dwt_cb_data_t *rxd)
+{
+  rx_timeout_counter++;
+}
+#else
 #pragma GCC optimize ("O3")
 void instance_cbRxTo(const dwt_cb_data_t *rxd)
 {
@@ -2373,7 +2393,14 @@ void instance_cbRxTo(const dwt_cb_data_t *rxd)
           //printf("RX timeout while in %d\n", instance_data[instance].testAppState);
 
 }
+#endif
 //ERWIN
+#if 1 //for testing with init-resp example
+void instance_cbRxErr(const dwt_cb_data_t *rxd)
+{
+  rx_error_counter++;
+}
+#else
 #pragma GCC optimize ("O3")
 void instance_cbRxErr(const dwt_cb_data_t *rxd)
 {
@@ -2399,6 +2426,7 @@ void instance_cbRxErr(const dwt_cb_data_t *rxd)
         //ERWIN return;
         //led_off(LED_PC9);
 }
+#endif
 #if 0 //ERWIN
 #pragma GCC optimize ("O3")
 void instance_rxcallback(const dwt_cb_data_t *rxd)
