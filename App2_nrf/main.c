@@ -891,13 +891,14 @@ void buzzer_task_function (void * pvParameter)
 void main_task_function(void * pvParameter)
 {
     UNUSED_PARAMETER(pvParameter);
-#if 0 //ERWIN
+
     int i = 0;
     int rx = 0;
     int toggle = 0;
     uint8 command = 0x0;
     pauseUsbReports = 0;
 
+#if 1 //ERWIN
 #if 0 //ERWIN
     led_off(LED_ALL); //turn off all the LEDs
 #endif
@@ -1156,9 +1157,10 @@ void main_task_function(void * pvParameter)
     // main loop
     while(1)
     {
-#if 0
+
     	n = 0;
         printf("main_loop\n");
+
     	if(UpdateSettings) {
     		dwt_forcetrxoff();	//this will clear all events
 #if 0 //ERWIN
@@ -2016,7 +2018,7 @@ void main_task_function(void * pvParameter)
         //led_on(LED_PC7);
 //        usb_run();
         //led_off(LED_PC7);
-#endif
+
       /* Delay a task for a given number of ticks */
       vTaskDelay(MAIN_TASK_DELAY);
       /* Tasks must be implemented to never return... */
