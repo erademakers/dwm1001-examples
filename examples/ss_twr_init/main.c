@@ -34,7 +34,7 @@
 #include "deca_param_types.h"
 #include "deca_regs.h"
 #include "deca_device_api.h"
-#include "uart.h"
+#include "UART.h"
 	
 //-----------------dw1000----------------------------
 
@@ -120,7 +120,7 @@ int main(void)
 
     /* Start timer for LED1 blinking */
     led_toggle_timer_handle = xTimerCreate( "LED1", TIMER_PERIOD, pdTRUE, NULL, led_toggle_timer_callback);
-    UNUSED_VARIABLE(xTimerStart(led_toggle_timer_handle, 0));
+    //UNUSED_VARIABLE(xTimerStart(led_toggle_timer_handle, 0));
 
     /* Create task for SS TWR Initiator set to 2 */
     UNUSED_VARIABLE(xTaskCreate(ss_initiator_task_function, "SSTWR_INIT", configMINIMAL_STACK_SIZE + 200, NULL, 2, &ss_initiator_task_handle));
@@ -200,7 +200,7 @@ int main(void)
  *    device should have its own antenna delay properly calibrated to get good precision when performing range measurements.
  * 3. This timeout is for complete reception of a frame, i.e. timeout duration must take into account the length of the expected frame. Here the value
  *    is arbitrary but chosen large enough to make sure that there is enough time to receive the complete response frame sent by the responder at the
- *    6.8M data rate used (around 200 µs).
+ *    6.8M data rate used (around 200 s).
  * 4. In a real application, for optimum performance within regulatory limits, it may be necessary to set TX pulse bandwidth and TX power, (using
  *    the dwt_configuretxrf API call) to per device calibrated values saved in the target system or the DW1000 OTP memory.
  * 5. The user is referred to DecaRanging ARM application (distributed with EVK1000 product) for additional practical example of usage, and to the

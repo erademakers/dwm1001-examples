@@ -108,4 +108,5 @@
     inherited_configurations="Internal"
     linker_printf_fp_enabled="Float"
     linker_section_placement_file="$(SolutionDir)/RTE/flash_placement.xml" />
+  <import file_name="../../ss_twr_init/SES/ss_twr_init.emProject" />
 </solution>
