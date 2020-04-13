@@ -37,7 +37,6 @@
       <file file_name="../config/sdk_config.h" />
       <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/App2_nrf/instance.c" />
       <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/App2_nrf/instance_common.c" />
-      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/App2_nrf/instance.h" />
     </folder>
     <folder Name="Board Definition">
       <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/boards/boards.c" />

@@ -70,6 +70,12 @@ extern "C" {
 #define ENABLE_CIR_DATA	(1)     //if set to 1 then CIR data will be sent via USB to PC
 #define USB_MSG_BINARY (1)		//if set to 1 then USB message is in binary format, otherwise it is in ASCII format
 #endif
+
+//for debugging
+extern volatile int rx_error_counter;
+extern volatile int rx_ok_counter;
+extern volatile int rx_timeout_counter;
+
 /******************************************************************************************************************
 *******************************************************************************************************************
 *******************************************************************************************************************/

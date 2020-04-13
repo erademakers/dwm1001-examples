@@ -34,7 +34,7 @@
 #include "deca_param_types.h"
 #include "deca_regs.h"
 #include "deca_device_api.h"
-#include "uart.h"
+#include "UART.h"
 #include "ss_init_main.h"
 #include "nrf_drv_gpiote.h"
 	

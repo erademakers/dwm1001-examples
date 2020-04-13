@@ -22,6 +22,10 @@
 //      Data Definitions
 // -------------------------------------------------------------------------------------------------------------------
 
+volatile int rx_error_counter = 0;
+volatile int rx_ok_counter = 0;
+volatile int rx_timeout_counter = 0;
+
 // -------------------------------------------------------------------------------------------------------------------
 //double inst_tdist[MAX_TAG_LIST_SIZE] ;
 //double inst_idist[MAX_ANCHOR_LIST_SIZE] ;
@@ -1448,6 +1452,8 @@ void instance_cbRxOk(const dwt_cb_data_t *rxd)
 	uint8 dstAddr_index = 0;
 	event_data_t dw_event;
 
+        rx_ok_counter++;
+
 //	uint8 aaa = 0;
 
 	//microcontroller time at which we received the frame
@@ -2333,6 +2339,8 @@ void instance_cbRxTo(const dwt_cb_data_t *rxd)
 	uint8 dstAddr_index = 0;
 	event_data_t dw_event;
 
+        rx_timeout_counter++;
+
 //	uint8 aaa = 0;
 
 	//microcontroller time at which we received the frame
@@ -2377,6 +2385,8 @@ void instance_cbRxErr(const dwt_cb_data_t *rxd)
 	uint8 srcAddr_index = 0;
 	uint8 dstAddr_index = 0;
 	event_data_t dw_event;
+
+        rx_error_counter++;
 
 //	uint8 aaa = 0;
 
@@ -3436,6 +3446,7 @@ void instance_clearevents(void)
 #pragma GCC optimize ("O3")
 int instance_run_TWR(void)
 {
+#if 1
     int instance = 0 ;
     int done = INST_NOT_DONE_YET;
     int message = instance_peekevent(); //get any of the received events from ISR
@@ -3673,7 +3684,7 @@ int instance_run_TWR(void)
 				//if we are in the last slot - then A0 ranges to A1 and A2
 				if( slotTime >= instance_data[instance].a0SlotTime)
 				{
-					port_DisableEXT_IRQ(); //enable ScenSor IRQ before starting
+					nrf_drv_gpiote_in_event_disable(DW1000_IRQ); //ERWIN todo port_DisableEXT_IRQ(); //enable ScenSor IRQ before starting
 					//anchor0 sends poll to anchor1
 					instance_data[instance].mode = ANCHOR_RNG; //change to ranging initiator
 					dwt_forcetrxoff(); //disable DW1000
@@ -3684,14 +3695,14 @@ int instance_run_TWR(void)
 					instance_data[instance].msg_f.destAddr[1] = (GATEWAY_ANCHOR_ADDR >> 8);
 					instance_data[instance].instanceTimerEn = 0;
 					instance_data[instance].rangeNumAnc++;
-					port_EnableEXT_IRQ(); //enable ScenSor IRQ before starting
+					nrf_drv_gpiote_in_event_enable(DW1000_IRQ, true); //ERWIN todo port_EnableEXT_IRQ(); //enable ScenSor IRQ before starting
 				}
         	}
 			else if (instance_data[instance].instanceAddress16 == A1_ANCHOR_ADDR) //A1 ranges to A2 in the 2nd half of last slot
 			{
 				if(portGetTickCnt() >= instance_data[instance].a1SlotTime) //ERWIN
 				{
-					port_DisableEXT_IRQ(); //enable ScenSor IRQ before starting
+					nrf_drv_gpiote_in_event_disable(DW1000_IRQ); //ERWIN todo port_DisableEXT_IRQ(); //enable ScenSor IRQ before starting
 					//anchor1 sends poll to anchor2
 					instance_data[instance].mode = ANCHOR_RNG; //change to ranging initiator
 					dwt_forcetrxoff(); //disable DW1000
@@ -3703,7 +3714,7 @@ int instance_run_TWR(void)
 
 					instance_data[instance].instanceTimerEn = 0;
 					//instance_data[instance].a1SlotTime = 0;
-					port_EnableEXT_IRQ(); //enable ScenSor IRQ before starting
+					nrf_drv_gpiote_in_event_enable(DW1000_IRQ, true); //ERWIN todo port_EnableEXT_IRQ(); //enable ScenSor IRQ before starting
 				}
 			}
 		}
@@ -3723,6 +3734,7 @@ int instance_run_TWR(void)
         	}
         }
     }
+#endif
 #endif
     return 0 ;
 }

@@ -171,6 +171,20 @@ void vInterruptInit (void)
   nrf_drv_gpiote_in_event_enable(DW1000_IRQ, true);
 }
 
+/*DW1000 config function*/
+static dwt_config_t config = {
+    5,                /* Channel number. */
+    DWT_PRF_64M,      /* Pulse repetition frequency. */
+    DWT_PLEN_128,     /* Preamble length. Used in TX only. */
+    DWT_PAC8,         /* Preamble acquisition chunk size. Used in RX only. */
+    10,               /* TX preamble code. Used in TX only. */
+    10,               /* RX preamble code. Used in RX only. */
+    0,                /* 0 to use standard SFD, 1 to use non-standard SFD. */
+    DWT_BR_6M8,       /* Data rate. */
+    DWT_PHRMODE_STD,  /* PHY header mode. */
+    (129 + 8 - 8)     /* SFD timeout (preamble length + 1 + SFD length - PAC size). Used in RX only. */
+};
+
 uint32 inittestapplication(uint8 s1switch)
 {
     uint32 devID ;
@@ -811,7 +825,7 @@ static dwt_config_t config = {
 
 #define LED_TASK_DELAY        2000           /**< Task delay. Delays a LED0 task for 200 ms */
 #define BUZZER_TASK_DELAY 1000
-#define MAIN_TASK_DELAY 50
+#define MAIN_TASK_DELAY 500
 
 #ifdef USE_FREERTOS
 
@@ -828,13 +842,27 @@ TimerHandle_t buzzer_task_handle;  /**< Reference to Buzzer FreeRTOS timer. */
  *
  * @param[in] pvParameter   Pointer that will be used as the parameter for the task.
  */
+#pragma GCC optimize ("O3")
 static void led_toggle_task_function (void * pvParameter)
 {
   UNUSED_PARAMETER(pvParameter);
   while (true)
   {
-    LEDS_INVERT(BSP_LED_0_MASK);
+    //LEDS_INVERT(BSP_LED_0_MASK);
     /* Delay a task for a given number of ticks */
+    if (rx_ok_counter > 0)
+    {
+      LEDS_ON(BSP_LED_0_MASK);
+    }
+    if (rx_error_counter > 0)
+    {
+      LEDS_ON(BSP_LED_1_MASK);
+    }
+    if (rx_timeout_counter > 0)
+    {
+      LEDS_ON(BSP_LED_2_MASK);
+    }
+
     vTaskDelay(LED_TASK_DELAY);
     /* Tasks must be implemented to never return... */
   }
@@ -854,7 +882,7 @@ static void led_toggle_task_function (void * pvParameter)
 *
 * @param[in] pvParameter   Pointer that will be used as the parameter for the task.
 */
-void buzzer_task_function (void * pvParameter)
+static void buzzer_task_function (void * pvParameter)
 {
   UNUSED_PARAMETER(pvParameter);
 
@@ -871,14 +899,12 @@ void buzzer_task_function (void * pvParameter)
     */
     //printf("test buzzer_task_function\n");
     /* Delay a task for a given number of ticks */
-    LEDS_INVERT(BSP_LED_1_MASK);
+    //LEDS_INVERT(BSP_LED_1_MASK);
     vTaskDelay(BUZZER_TASK_DELAY);
     /* Tasks must be implemented to never return... */
   }
 }
 #else
-
-  extern int ss_init_run(void);
 
 #endif   // #ifdef USE_FREERTOS
 
@@ -888,9 +914,12 @@ void buzzer_task_function (void * pvParameter)
 **/
 
 #pragma GCC optimize ("O3")
-void main_task_function(void * pvParameter)
+static void main_task_function(void * pvParameter)
 {
     UNUSED_PARAMETER(pvParameter);
+
+    
+
 
     int i = 0;
     int rx = 0;
@@ -898,12 +927,12 @@ void main_task_function(void * pvParameter)
     uint8 command = 0x0;
     pauseUsbReports = 0;
 
-#if 1 //ERWIN
+
 #if 0 //ERWIN
     led_off(LED_ALL); //turn off all the LEDs
 #endif
 
-#if 0 //ERWIN
+#if 0 //ERWIN todo
     peripherals_init();
 
     spi_peripheral_init();
@@ -923,7 +952,7 @@ void main_task_function(void * pvParameter)
     Sleep(1000);
 #endif
 
-#if 0 //ERWIN
+#if 0 //ERWIN todo
     // enable the USB functionality
     usb_init();
     Sleep(1000);
@@ -962,9 +991,7 @@ void main_task_function(void * pvParameter)
     phy_datarate = DWT_BR_6M8;
 #endif
 
-#if 0 //ERWIN
-    port_DisableEXT_IRQ(); //disable ScenSor IRQ until we configure the device
-#endif
+    nrf_drv_gpiote_in_event_disable(DW1000_IRQ); //ERWIN todo port_DisableEXT_IRQ(); //disable ScenSor IRQ until we configure the device
 
     //run DecaRangeRTLS application for TREK
 
@@ -1044,7 +1071,7 @@ void main_task_function(void * pvParameter)
     	//ERWIN todo return 0; //error
     }
 
-
+#if 0
 #if 0 //ERWIN
     // Configure USB for output, (i.e. not USB to SPI)
     usb_printconfig(16, (uint8 *)SOFTWARE_VER_STRING, s1switch);
@@ -1155,6 +1182,7 @@ void main_task_function(void * pvParameter)
 //    usartinit();
 #endif
     // main loop
+    
     while(1)
     {
 
@@ -1163,13 +1191,13 @@ void main_task_function(void * pvParameter)
 
     	if(UpdateSettings) {
     		dwt_forcetrxoff();	//this will clear all events
-#if 0 //ERWIN
-    		port_DisableEXT_IRQ(); //disable ScenSor IRQ until we configure the device
-#endif
+
+    		nrf_drv_gpiote_in_event_disable(DW1000_IRQ); //ERWIN todo port_DisableEXT_IRQ(); //disable ScenSor IRQ until we configure the device
+
     		inittestapplication(0);
-#if 0 //ERWIN
-    		port_EnableEXT_IRQ(); //enable ScenSor IRQ before starting
-#endif
+
+    		nrf_drv_gpiote_in_event_enable(DW1000_IRQ, true); //ERWIN todo port_EnableEXT_IRQ(); //enable ScenSor IRQ before starting
+
 //    		updateUWBsettings();
 //    		// initialize init state
 //    		if(instance_data[0].opMode == TWR)
@@ -1189,6 +1217,7 @@ void main_task_function(void * pvParameter)
 #endif
     		UpdateSettings = 0;
     	}
+
 #if 0 //ERWIN
     	if(send_tx_buff)
     	{
@@ -1218,6 +1247,7 @@ void main_task_function(void * pvParameter)
 
     	if(pauseUsbReports == 0 && instance_data[0].opMode == TWR) // TWR mode
     	{
+#if 0
     		instance_run_TWR();
 
 
@@ -1735,6 +1765,7 @@ void main_task_function(void * pvParameter)
 #endif
     		}
     		n = 0;
+#endif
     	}
     	else if(pauseUsbReports == 0 && instance_data[0].opMode == TOA) // TOA mode
     	{
@@ -2020,6 +2051,7 @@ void main_task_function(void * pvParameter)
         //led_off(LED_PC7);
 
       /* Delay a task for a given number of ticks */
+      //LEDS_INVERT(BSP_LED_2_MASK);
       vTaskDelay(MAIN_TASK_DELAY);
       /* Tasks must be implemented to never return... */
     }
@@ -2032,20 +2064,20 @@ int main(void)
   /*Initialization UART*/
   boUART_Init ();
 
-  /* Setup some LEDs for debug Green and Blue on DWM1001-DEV */
+  /* Setup some LEDs for debug Green, Blue, Red on DWM1001-DEV */
   LEDS_CONFIGURE(BSP_LED_0_MASK | BSP_LED_1_MASK | BSP_LED_2_MASK);
-  LEDS_ON(BSP_LED_0_MASK | BSP_LED_1_MASK | BSP_LED_2_MASK );
+  LEDS_OFF(BSP_LED_0_MASK | BSP_LED_1_MASK | BSP_LED_2_MASK );
 
   #ifdef USE_FREERTOS
-    /* Create task for LED0 blinking with priority set to 2 */
-    UNUSED_VARIABLE(xTaskCreate(led_toggle_task_function, "LED0", configMINIMAL_STACK_SIZE, NULL, 1, &led_toggle_task_handle));
+    /* Create task for LED blinking*/
+    UNUSED_VARIABLE(xTaskCreate(led_toggle_task_function, "LED", configMINIMAL_STACK_SIZE, NULL, 1, &led_toggle_task_handle));
 
     /* Create task for the buzzer */
     UNUSED_VARIABLE(xTaskCreate(buzzer_task_function, "BUZZER", configMINIMAL_STACK_SIZE, NULL, 2, &buzzer_task_handle));
 
     /* Create task for the main loop */
-    UNUSED_VARIABLE(xTaskCreate(main_task_function, "MAIN LOOP", configMINIMAL_STACK_SIZE + 2000, NULL, 3, &main_task_handle)); //Low priority numbers denote low priority tasks.
-  #endif
+    UNUSED_VARIABLE(xTaskCreate(main_task_function, "MAIN LOOP", configMINIMAL_STACK_SIZE + 100, NULL, 3, &main_task_handle)); //Low priority numbers denote low priority tasks.
+  #endif  
 
   #ifdef USE_FREERTOS		
     /* Start FreeRTOS scheduler. */
