@@ -37,7 +37,8 @@
 #include "nrf_drv_gpiote.h"
 #include "UART.h"
 #include "instance.h"
-	
+
+
 //-----------------dw1000----------------------------
 
 #if VERSION == VER_1p0
@@ -805,8 +806,9 @@ static dwt_config_t config = {
 
 #endif
 
-#define TASK_DELAY        200           /**< Task delay. Delays a LED0 task for 200 ms */
-#define TIMER_PERIOD      2000          /**< Timer period. LED1 timer will expire after 1000 ms */
+#define LED_TASK_DELAY        2000           /**< Task delay. Delays a LED0 task for 200 ms */
+
+#define BUZZER_TASK_DELAY 1000
 
 #ifdef USE_FREERTOS
 
@@ -829,7 +831,7 @@ static void led_toggle_task_function (void * pvParameter)
   {
     LEDS_INVERT(BSP_LED_0_MASK);
     /* Delay a task for a given number of ticks */
-    vTaskDelay(TASK_DELAY);
+    vTaskDelay(LED_TASK_DELAY);
     /* Tasks must be implemented to never return... */
   }
 }
@@ -838,10 +840,37 @@ static void led_toggle_task_function (void * pvParameter)
  *
  * @param[in] pvParameter   Pointer that will be used as the parameter for the timer.
  */
-static void led_toggle_timer_callback (void * pvParameter)
+//static void led_toggle_timer_callback (void * pvParameter)
+//{
+//  UNUSED_PARAMETER(pvParameter);
+//  LEDS_INVERT(BSP_LED_1_MASK);
+//}
+
+/**@brief SS TWR Initiator task entry function.
+*
+* @param[in] pvParameter   Pointer that will be used as the parameter for the task.
+*/
+void ss_buzzer_task_function (void * pvParameter)
 {
   UNUSED_PARAMETER(pvParameter);
-  LEDS_INVERT(BSP_LED_1_MASK);
+
+  //dwt_setrxtimeout(RESP_RX_TIMEOUT_UUS);
+
+  //dwt_setleds(DWT_LEDS_ENABLE);
+
+  while (true)
+  {
+    //Buzzer implementation here: PWM: duty cycle ? frequency ?
+    /*
+    if range to close
+     toggle pin
+    */
+    printf("test ss_buzzer_task_function\n");
+    /* Delay a task for a given number of ticks */
+    LEDS_INVERT(BSP_LED_1_MASK);
+    vTaskDelay(BUZZER_TASK_DELAY);
+    /* Tasks must be implemented to never return... */
+  }
 }
 #else
 
@@ -931,7 +960,37 @@ int main(void)
   #endif
 #else
 
+  /*Initialization UART*/
+  boUART_Init ();
 
+  /* Setup some LEDs for debug Green and Blue on DWM1001-DEV */
+  LEDS_CONFIGURE(BSP_LED_0_MASK | BSP_LED_1_MASK | BSP_LED_2_MASK);
+  LEDS_ON(BSP_LED_0_MASK | BSP_LED_1_MASK | BSP_LED_2_MASK );
+
+  #ifdef USE_FREERTOS
+    /* Create task for LED0 blinking with priority set to 2 */
+    UNUSED_VARIABLE(xTaskCreate(led_toggle_task_function, "LED0", configMINIMAL_STACK_SIZE + 200, NULL, 2, &led_toggle_task_handle));
+
+    /* Create task for the buzzer */
+    UNUSED_VARIABLE(xTaskCreate(ss_buzzer_task_function, "BUZZER", configMINIMAL_STACK_SIZE + 200, NULL, 2, &ss_buzzer_task_function));
+  #endif
+
+    #ifdef USE_FREERTOS		
+    /* Start FreeRTOS scheduler. */
+    vTaskStartScheduler();	
+
+    while(1) 
+    {};
+  #else
+
+    // No RTOS task here so just call the main loop here.
+    // Loop forever responding to ranging requests.
+    while (1)
+    {
+      //ss_init_run();
+    }
+
+  #endif
 
 #endif
 }

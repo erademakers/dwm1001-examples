@@ -1,6 +1,6 @@
 <!DOCTYPE CrossStudio_Project_File>
-<solution Name="ss_twr_init" target="8" version="2">
-  <project Name="ss_twr_init">
+<solution Name="App2_nrf" target="8" version="2">
+  <project Name="App2_nrf">
     <configuration
       Name="Common"
       arm_architecture="v7EM"
@@ -19,14 +19,14 @@
       project_type="Executable" />
     <folder Name="Internal Files">
       <file file_name="RTE/thumb_crt0.s" />
-      <file file_name="../../../nRF5_SDK_14.2.0/components/toolchain/ses/ses_nrf52_startup.s" />
-      <file file_name="../../../nRF5_SDK_14.2.0/components/toolchain/system_nrf52.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/toolchain/system_nrf52.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/toolchain/ses/ses_nrf52_startup.s" />
     </folder>
     <configuration
       Name="nrf52832_xxaa"
       c_only_additional_options=""
       c_preprocessor_definitions="BOARD_DW1001_DEV;BSP_SIMPLE;CONFIG_GPIO_AS_PINRESET;FLOAT_ABI_HARD;NRF52;NRF52832_XXAA;NRF52_PAN_74;SWI_DISABLE0"
-      c_user_include_directories="/home/erwin/workspace/git/dwm1001-examples/examples/ss_twr_init/Trek1000/compiler/;/home/erwin/workspace/git/dwm1001-examples/examples/ss_twr_init/Trek1000/Application/;$(PackagesDir)/nRF/CMSIS/Device/Include;$(PackagesDir)/CMSIS_5/CMSIS/Core/Include;../../../nRF5_SDK_14.2.0/components/device;../UART;../config;../../../nRF5_SDK_14.2.0/components;../../../nRF5_SDK_14.2.0/components/boards;../../../nRF5_SDK_14.2.0/components/drivers_nrf/clock;../../../nRF5_SDK_14.2.0/components/drivers_nrf/common;../../../nRF5_SDK_14.2.0/components/drivers_nrf/delay;../../../nRF5_SDK_14.2.0/components/drivers_nrf/gpiote;../../../nRF5_SDK_14.2.0/components/drivers_nrf/hal;../../../nRF5_SDK_14.2.0/components/drivers_nrf/nrf_soc_nosd;../../../nRF5_SDK_14.2.0/components/drivers_nrf/spi_master;../../../nRF5_SDK_14.2.0/components/drivers_nrf/uart;../../../nRF5_SDK_14.2.0/components/libraries/atomic;../../../nRF5_SDK_14.2.0/components/libraries/balloc;../../../nRF5_SDK_14.2.0/components/libraries/bsp;../../../nRF5_SDK_14.2.0/components/libraries/button;../../../nRF5_SDK_14.2.0/components/libraries/fifo;../../../nRF5_SDK_14.2.0/components/libraries/experimental_log;../../../nRF5_SDK_14.2.0/components/libraries/experimental_log/src;../../../nRF5_SDK_14.2.0/components/libraries/experimental_memobj;../../../nRF5_SDK_14.2.0/components/libraries/experimental_section_vars;../../../nRF5_SDK_14.2.0/components/libraries/scheduler;../../../nRF5_SDK_14.2.0/components/libraries/strerror;../../../nRF5_SDK_14.2.0/components/libraries/timer;../../../nRF5_SDK_14.2.0/components/libraries/util;../../../nRF5_SDK_14.2.0/components/libraries/uart;../../../nRF5_SDK_14.2.0/components/toolchain;../../../deca_driver;../../../deca_driver/port;../../../nRF5_SDK_14.2.0/external/fprintf;../../../nRF5_SDK_14.2.0/external/segger_rtt;../../../nRF5_SDK_14.2.0/external/freertos/;../../../nRF5_SDK_14.2.0/external/freertos/source;../../../nRF5_SDK_14.2.0/external/freertos/config;../../../nRF5_SDK_14.2.0/external/freertos/source/include;../../../nRF5_SDK_14.2.0/external/freertos/portable/ARM/nrf52;../../../nRF5_SDK_14.2.0/external/freertos/portable/CMSIS/nrf52;../../../nRF5_SDK_14.2.0/external/freertos/source/portable;../../../boards;../../.."
+      c_user_include_directories="../compiler;$(PackagesDir)/nRF/CMSIS/Device/Include;$(PackagesDir)/CMSIS_5/CMSIS/Core/Include;../../nRF5_SDK_14.2.0/components/device;../UART;../config;../../nRF5_SDK_14.2.0/components;../../nRF5_SDK_14.2.0/components/boards;../../nRF5_SDK_14.2.0/components/drivers_nrf/clock;../../nRF5_SDK_14.2.0/components/drivers_nrf/common;../../nRF5_SDK_14.2.0/components/drivers_nrf/delay;../../nRF5_SDK_14.2.0/components/drivers_nrf/gpiote;../../nRF5_SDK_14.2.0/components/drivers_nrf/hal;../../nRF5_SDK_14.2.0/components/drivers_nrf/nrf_soc_nosd;../../nRF5_SDK_14.2.0/components/drivers_nrf/spi_master;../../nRF5_SDK_14.2.0/components/drivers_nrf/uart;../../nRF5_SDK_14.2.0/components/libraries/atomic;../../nRF5_SDK_14.2.0/components/libraries/balloc;../../nRF5_SDK_14.2.0/components/libraries/bsp;../../nRF5_SDK_14.2.0/components/libraries/button;../../nRF5_SDK_14.2.0/components/libraries/fifo;../../nRF5_SDK_14.2.0/components/libraries/experimental_log;../../nRF5_SDK_14.2.0/components/libraries/experimental_log/src;../../nRF5_SDK_14.2.0/components/libraries/experimental_memobj;../../nRF5_SDK_14.2.0/components/libraries/experimental_section_vars;../../nRF5_SDK_14.2.0/components/libraries/scheduler;../../nRF5_SDK_14.2.0/components/libraries/strerror;../../nRF5_SDK_14.2.0/components/libraries/timer;../../nRF5_SDK_14.2.0/components/libraries/util;../../nRF5_SDK_14.2.0/components/libraries/uart;../../nRF5_SDK_14.2.0/components/toolchain;../../deca_driver;../../deca_driver/port;../../nRF5_SDK_14.2.0/external/fprintf;../../nRF5_SDK_14.2.0/external/segger_rtt;../../nRF5_SDK_14.2.0/external/freertos/;../../nRF5_SDK_14.2.0/external/freertos/source;../../nRF5_SDK_14.2.0/external/freertos/config;../../nRF5_SDK_14.2.0/external/freertos/source/include;../../nRF5_SDK_14.2.0/external/freertos/portable/ARM/nrf52;../../nRF5_SDK_14.2.0/external/freertos/portable/CMSIS/nrf52;../../nRF5_SDK_14.2.0/external/freertos/source/portable;../../boards;../.."
       linker_additional_options=""
       linker_section_placement_file="$(ProjectDir)/RTE/flash_placement.xml" />
     <configuration
@@ -35,76 +35,74 @@
     <folder Name="Application">
       <file file_name="../main.c" />
       <file file_name="../config/sdk_config.h" />
-      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/examples/ss_twr_init/Trek1000/Application/instance.c" />
-      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/examples/ss_twr_init/Trek1000/Application/instance_common.c" />
-      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/examples/ss_twr_init/Trek1000/Application/instance.h">
-        <configuration Name="nrf52832_xxaa" build_exclude_from_build="Yes" />
-      </file>
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/App2_nrf/instance.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/App2_nrf/instance_common.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/App2_nrf/instance.h" />
     </folder>
     <folder Name="Board Definition">
-      <file file_name="../../../nRF5_SDK_14.2.0/components/boards/boards.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/boards/boards.c" />
     </folder>
     <folder Name="Board Support">
-      <file file_name="../../../nRF5_SDK_14.2.0/components/libraries/bsp/bsp.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/components/libraries/bsp/bsp_nfc.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/libraries/bsp/bsp.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/libraries/bsp/bsp_nfc.c" />
     </folder>
     <folder Name="nRF_Drivers">
-      <file file_name="../../../nRF5_SDK_14.2.0/components/drivers_nrf/common/nrf_drv_common.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/components/drivers_nrf/gpiote/nrf_drv_gpiote.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/components/drivers_nrf/spi_master/nrf_drv_spi.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/components/drivers_nrf/uart/nrf_drv_uart.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/components/drivers_nrf/clock/nrf_drv_clock.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/drivers_nrf/clock/nrf_drv_clock.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/drivers_nrf/common/nrf_drv_common.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/drivers_nrf/gpiote/nrf_drv_gpiote.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/drivers_nrf/uart/nrf_drv_uart.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/drivers_nrf/spi_master/nrf_drv_spi.c" />
     </folder>
     <folder Name="nRF_Libraries">
-      <file file_name="../../../nRF5_SDK_14.2.0/components/libraries/button/app_button.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/components/libraries/util/app_error.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/components/libraries/util/app_error_weak.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/components/libraries/scheduler/app_scheduler.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/components/libraries/util/app_util_platform.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/components/libraries/util/nrf_assert.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/components/libraries/balloc/nrf_balloc.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/external/fprintf/nrf_fprintf.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/external/fprintf/nrf_fprintf_format.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/components/libraries/experimental_memobj/nrf_memobj.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/components/libraries/strerror/nrf_strerror.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/components/libraries/fifo/app_fifo.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/components/libraries/uart/app_uart_fifo.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/components/libraries/uart/retarget.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/libraries/button/app_button.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/libraries/util/app_error.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/libraries/util/app_error_weak.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/libraries/util/app_util_platform.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/libraries/util/nrf_assert.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/libraries/fifo/app_fifo.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/libraries/scheduler/app_scheduler.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/libraries/balloc/nrf_balloc.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/external/fprintf/nrf_fprintf.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/external/fprintf/nrf_fprintf_format.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/libraries/experimental_memobj/nrf_memobj.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/libraries/strerror/nrf_strerror.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/libraries/uart/retarget.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/libraries/uart/app_uart_fifo.c" />
     </folder>
     <folder Name="nRF_Log">
-      <file file_name="../../../nRF5_SDK_14.2.0/components/libraries/experimental_log/src/nrf_log_backend_rtt.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/components/libraries/experimental_log/src/nrf_log_backend_serial.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/components/libraries/experimental_log/src/nrf_log_backend_uart.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/components/libraries/experimental_log/src/nrf_log_default_backends.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/components/libraries/experimental_log/src/nrf_log_frontend.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/components/libraries/experimental_log/src/nrf_log_str_formatter.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/libraries/experimental_log/src/nrf_log_backend_rtt.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/libraries/experimental_log/src/nrf_log_backend_serial.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/libraries/experimental_log/src/nrf_log_backend_uart.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/libraries/experimental_log/src/nrf_log_default_backends.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/libraries/experimental_log/src/nrf_log_frontend.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/libraries/experimental_log/src/nrf_log_str_formatter.c" />
     </folder>
     <folder Name="nRF_Segger_RTT">
-      <file file_name="../../../nRF5_SDK_14.2.0/external/segger_rtt/SEGGER_RTT.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/external/segger_rtt/SEGGER_RTT_printf.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/external/segger_rtt/SEGGER_RTT_Syscalls_KEIL.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/external/segger_rtt/SEGGER_RTT.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/external/segger_rtt/SEGGER_RTT_printf.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/external/segger_rtt/SEGGER_RTT_Syscalls_KEIL.c" />
     </folder>
     <folder Name="Decadriver">
-      <file file_name="../../../deca_driver/deca_device.c" />
-      <file file_name="../../../deca_driver/deca_params_init.c" />
-      <file file_name="../../../deca_driver/port/port_platform.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/deca_driver/deca_device.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/deca_driver/deca_params_init.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/deca_driver/port/port_platform.c" />
     </folder>
     <folder Name="Freertos">
-      <file file_name="../../../nRF5_SDK_14.2.0/external/freertos/source/croutine.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/external/freertos/source/event_groups.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/external/freertos/source/list.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/external/freertos/source/queue.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/external/freertos/source/tasks.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/external/freertos/source/timers.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/external/freertos/source/portable/MemMang/heap_1.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/components/libraries/timer/app_timer_freertos.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/external/freertos/portable/CMSIS/nrf52/port_cmsis.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/external/freertos/portable/CMSIS/nrf52/port_cmsis_systick.c" />
-      <file file_name="../../../nRF5_SDK_14.2.0/external/freertos/portable/CMSIS/nrf52/portmacro_cmsis.h" />
-      <file file_name="../../../nRF5_SDK_14.2.0/external/freertos/portable/GCC/nrf52/port.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/external/freertos/source/croutine.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/external/freertos/source/event_groups.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/external/freertos/source/list.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/external/freertos/source/queue.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/external/freertos/source/tasks.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/external/freertos/source/timers.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/external/freertos/portable/CMSIS/nrf52/port_cmsis.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/external/freertos/portable/CMSIS/nrf52/port_cmsis_systick.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/external/freertos/portable/GCC/nrf52/port.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/external/freertos/source/portable/MemMang/heap_1.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/external/freertos/portable/CMSIS/nrf52/portmacro_cmsis.h" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/components/libraries/timer/app_timer_freertos.c" />
     </folder>
     <folder Name="Config">
-      <file file_name="../../../nRF5_SDK_14.2.0/external/freertos/config/FreeRTOSConfig.h" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/external/freertos/config/FreeRTOSConfig.h" />
     </folder>
     <folder Name="Uart">
       <file file_name="../UART/UART.c" />
