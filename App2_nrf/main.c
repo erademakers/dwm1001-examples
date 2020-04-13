@@ -37,7 +37,7 @@
 #include "nrf_drv_gpiote.h"
 #include "UART.h"
 #include "instance.h"
-
+#include "compiler.h"
 
 //-----------------dw1000----------------------------
 
@@ -64,11 +64,12 @@
 #define MMIO32(addr)  (*(volatile uint32_t *)(addr))
 #define U_ID_addr     0x1ffff7e8
 
-
-extern void usb_run(void);
-extern int usb_init(void);
-extern void usb_printconfig(int, uint8*, int);
-extern void send_usbmessage(uint8*, int);
+#if 0 //ERWIN
+  extern void usb_run(void);
+  extern int usb_init(void);
+  extern void usb_printconfig(int, uint8*, int);
+  extern void send_usbmessage(uint8*, int);
+#endif
 //extern instance_data_t instance_data[NUM_INST];
 //extern double inst_idist[MAX_ANCHOR_LIST_SIZE];
 extern double inst_idist[MAX_BUFF_SIZE];
@@ -764,6 +765,7 @@ void sendCIRdata(void)
     					asm("NOP"); asm("NOP"); asm("NOP");
 	#endif
     				}
+#if 0 //ERWIN
 	#if USB_MSG_BINARY == 1
     				usbVCOM_CIR[m++] = 0x80;
     				usbVCOM_CIR[m++] = 0x80;
@@ -774,6 +776,7 @@ void sendCIRdata(void)
     				usb_run();
     				asm("NOP"); asm("NOP"); asm("NOP");
 	#endif
+#endif
 }
 #endif // ENABLE_CIR_DATA
 
@@ -807,15 +810,16 @@ static dwt_config_t config = {
 #endif
 
 #define LED_TASK_DELAY        2000           /**< Task delay. Delays a LED0 task for 200 ms */
-
 #define BUZZER_TASK_DELAY 1000
+#define MAIN_TASK_DELAY 50
 
 #ifdef USE_FREERTOS
 
-TaskHandle_t  ss_initiator_task_handle;   /**< Reference to SS TWR Initiator FreeRTOS task. */
-extern void ss_initiator_task_function (void * pvParameter);
+TaskHandle_t  main_task_handle;   /**< Reference to main FreeRTOS task. */
 TaskHandle_t  led_toggle_task_handle;   /**< Reference to LED0 toggling FreeRTOS task. */
-TimerHandle_t led_toggle_timer_handle;  /**< Reference to LED1 toggling FreeRTOS timer. */
+TimerHandle_t buzzer_task_handle;  /**< Reference to Buzzer FreeRTOS timer. */
+
+
 #endif
 
 #ifdef USE_FREERTOS
@@ -850,7 +854,7 @@ static void led_toggle_task_function (void * pvParameter)
 *
 * @param[in] pvParameter   Pointer that will be used as the parameter for the task.
 */
-void ss_buzzer_task_function (void * pvParameter)
+void buzzer_task_function (void * pvParameter)
 {
   UNUSED_PARAMETER(pvParameter);
 
@@ -865,7 +869,7 @@ void ss_buzzer_task_function (void * pvParameter)
     if range to close
      toggle pin
     */
-    printf("test ss_buzzer_task_function\n");
+    //printf("test buzzer_task_function\n");
     /* Delay a task for a given number of ticks */
     LEDS_INVERT(BSP_LED_1_MASK);
     vTaskDelay(BUZZER_TASK_DELAY);
@@ -878,121 +882,1194 @@ void ss_buzzer_task_function (void * pvParameter)
 
 #endif   // #ifdef USE_FREERTOS
 
+/*
+ * @fn      main()
+ * @brief   main entry point
+**/
 
+#pragma GCC optimize ("O3")
+void main_task_function(void * pvParameter)
+{
+    UNUSED_PARAMETER(pvParameter);
+#if 0 //ERWIN
+    int i = 0;
+    int rx = 0;
+    int toggle = 0;
+    uint8 command = 0x0;
+    pauseUsbReports = 0;
+
+#if 0 //ERWIN
+    led_off(LED_ALL); //turn off all the LEDs
+#endif
+
+#if 0 //ERWIN
+    peripherals_init();
+
+    spi_peripheral_init();
+#endif
+
+#if 0 //ERWIN
+    Sleep(1000); //wait for LCD to power on
+
+    initLCD();
+
+    memset(dataseq, 0, LCD_BUFF_LEN);
+    memcpy(dataseq, (const uint8 *) "FlandersMake App", 16);
+    writetoLCD( 40, 1, dataseq); //send some data
+    memcpy(dataseq, (const uint8 *) SOFTWARE_VER_STRING, 16); // Also set at line #26 (Should make this from single value !!!)
+    writetoLCD( 16, 1, dataseq); //send some data
+
+    Sleep(1000);
+#endif
+
+#if 0 //ERWIN
+    // enable the USB functionality
+    usb_init();
+    Sleep(1000);
+#endif
+
+#if 0 //ERWIN
+      s1switch = is_button_low(0) << 6
+                          | is_switch_on(TA_SW1_3) << 5
+                          | is_switch_on(TA_SW1_4) << 4
+                          | is_switch_on(TA_SW1_5) << 3
+                      | is_switch_on(TA_SW1_6) << 2
+                          | is_switch_on(TA_SW1_7) << 1
+                          | is_switch_on(TA_SW1_8) << 0;
+
+      role = sw1_role = is_button_low(0);
+  //    sw1_chan = is_switch_on(TA_SW1_3) << 1 | is_switch_on(TA_SW1_4);
+      sw1_chan = is_switch_on(TA_SW1_3);
+      prbl = sw1_prbl = is_switch_on(TA_SW1_4);
+      prf = sw1_prf = is_switch_on(TA_SW1_5);
+  //    sw1_prf = 1;
+  #if VERSION == VER_1p0
+      phy_datarate = is_switch_on(TA_SW1_6) << 1 | is_switch_on(TA_SW1_7);
+      if(phy_datarate > 2)
+          phy_datarate = 2;
+      addr = sw1_addr = 0;
+  #else
+      addr = sw1_addr = is_switch_on(TA_SW1_6) << 2 | is_switch_on(TA_SW1_7) << 1 | is_switch_on(TA_SW1_8);
+  //    sw1_addr = is_switch_on(TA_SW1_5) << 3 | is_switch_on(TA_SW1_6) << 2 | is_switch_on(TA_SW1_7) << 1 | is_switch_on(TA_SW1_8);
+      // default data rate
+      phy_datarate = DWT_BR_6M8;
+  #endif
+#else
+    addr = sw1_addr = 0; //todo ERWIN
+
+    // default data rate
+    phy_datarate = DWT_BR_6M8;
+#endif
+
+#if 0 //ERWIN
+    port_DisableEXT_IRQ(); //disable ScenSor IRQ until we configure the device
+#endif
+
+    //run DecaRangeRTLS application for TREK
+
+#if 0 //ERWIN
+    command = 0x2 ;  //return cursor home
+    writetoLCD( 1, 0,  &command);
+    memset(dataseq, ' ', LCD_BUFF_LEN);
+    memcpy(dataseq, (const uint8 *) "FlandersMake App ", 16);
+    writetoLCD( 16, 1, dataseq); //send some data
+
+    led_off(LED_ALL);
+
+#endif
+
+//    instance_data[0].opMode = TWR;
+//    instance_data[0].opMode = TOA;
+
+#if VERSION == VER_1p0
+    opr_mode = TWR;
+#else
+    opr_mode = TWR;
+//    opr_mode = TOA;
+#endif
+    opr_mode_seq = 0;
+
+    // default period sync
+    instance_data[0].PeriodSync = sync_period_toa = TOA_DEFAULT_SYNC_PERIOD;
+
+    // default max tags supported for TOA mode
+    instance_data[0].maxSupportedTagTOA = max_numTagToa = MAX_TAG_LIST_SIZE_TOA;
+
+    // initialize super frame config
+    sfConfigTwr.maxAnchor = max_numAnchTwr = MAX_ANCHOR_LIST_SIZE;
+    sfConfigTwr.maxTags = max_numTagTwr = MAX_TAG_LIST_SIZE;
+    sfConfigTwr.numSlots = max_numTagTwr = MAX_TAG_LIST_SIZE;
+
+    instance_data[0].trxResponseTurnaround = trx_respTurnaround = TRX_RESP_TURNAROUND_DEFAULT;
+
+    instance_data[0].finalTxTimeIdx = RRXT0+(5*MAX_ANCHOR_LIST_SIZE);
+    instance_data[0].twrFinalMsgLen = TAG_FINAL_MSG_LEN;
+
+    instance_data[0].enableReport = enableImRpt = 0;
+    instance_data[0].updateLcdOn = enableLcdReport = 0;
+    instance_data[0].enableCirData = enableCirRpt = 0;
+
+//    if(phy_datarate == DWT_BR_110K) //DWT_BR_110K = 0
+//    {
+//    	sfConfigTwr.slotPeriod = SLOT_PERIOD_110K;
+//    	sfConfigTwr.replyDly = POLL_TO_FINAL_DLY_110K;
+//    }
+//    else if(phy_datarate == DWT_BR_850K) //DWT_BR_110K = 1
+//    {
+//    	sfConfigTwr.slotPeriod = SLOT_PERIOD_850K;
+//    	sfConfigTwr.replyDly = POLL_TO_FINAL_DLY_850K;
+//    }
+//    else	// DWT_BR_6M8 = 2
+//    {
+//    	sfConfigTwr.slotPeriod = SLOT_PERIOD_6M81;
+//    	sfConfigTwr.replyDly = POLL_TO_FINAL_DLY_6M81;
+//    }
+//    sfConfigTwr.sfPeriod = sfConfigTwr.numSlots*sfConfigTwr.slotPeriod;
+//    sfConfigTwr.pollSleepDly = sfConfigTwr.numSlots*sfConfigTwr.slotPeriod;
+
+
+    if(inittestapplication(0) == (uint32)-1)
+    {
+#if 0 //ERWIN
+    	led_on(LED_ALL); //to display error....
+    	dataseq[0] = 0x2 ;  //return cursor home
+    	writetoLCD( 1, 0,  &dataseq[0]);
+    	memset(dataseq, ' ', LCD_BUFF_LEN);
+    	memcpy(dataseq, (const uint8 *) "ERROR   ", 12);
+    	writetoLCD( 40, 1, dataseq); //send some data
+    	memcpy(dataseq, (const uint8 *) "  INIT FAIL ", 12);
+    	writetoLCD( 40, 1, dataseq); //send some data
+#endif
+    	//ERWIN todo return 0; //error
+    }
+
+
+#if 0 //ERWIN
+    // Configure USB for output, (i.e. not USB to SPI)
+    usb_printconfig(16, (uint8 *)SOFTWARE_VER_STRING, s1switch);
+#endif
+
+#if 0 //ERWIN
+    //sleep for 5 seconds displaying last LCD message and flashing LEDs
+    i=30;
+    while(i--)
+    {
+    	if (i & 1) led_off(LED_ALL);
+    	else    led_on(LED_ALL);
+
+    	Sleep(200);
+    }
+    i = 0;
+    led_off(LED_ALL);
+    command = 0x2 ;  //return cursor home
+    writetoLCD( 1, 0,  &command);
+
+    memset(dataseq, ' ', LCD_BUFF_LEN);
+    memset(dataseq1, ' ', LCD_BUFF_LEN);
+
+    setLCDline1();
+
+    command = 0x2 ;  //return cursor home
+    writetoLCD( 1, 0,  &command);
+
+    port_EnableEXT_IRQ(); //enable ScenSor IRQ before starting
+
+    //memset(dataseq, ' ', LCD_BUFF_LEN);
+    memset(dataseq1, ' ', LCD_BUFF_LEN);
+#endif
+
+    // clear diagnostics data
+#if ENABLE_DIAGNOSTICS == 1
+//    for(uint8 ii=0;ii<MAX_ANCHOR_LIST_SIZE;ii++)
+    for(uint8 ii=0;ii<MAX_BUFF_SIZE;ii++)
+    {
+    	instance_data[0].Adiags_data[ii].firstPath = 0;
+    	instance_data[0].Adiags_data[ii].firstPathAmp1 = 0;
+    	instance_data[0].Adiags_data[ii].firstPathAmp2 = 0;
+    	instance_data[0].Adiags_data[ii].firstPathAmp3 = 0;
+    	instance_data[0].Adiags_data[ii].maxGrowthCIR = 0;
+    	instance_data[0].Adiags_data[ii].maxNoise = 0;
+    	instance_data[0].Adiags_data[ii].rxPreamCount = 0;
+    	instance_data[0].Adiags_data[ii].stdNoise = 0;
+    }
+//    for(uint8 ii=0;ii<MAX_TAG_LIST_SIZE;ii++)
+    for(uint8 ii=0;ii<MAX_BUFF_SIZE;ii++)
+    {
+    	instance_data[0].Tdiags_data[ii].firstPath = 0;
+    	instance_data[0].Tdiags_data[ii].firstPathAmp1 = 0;
+    	instance_data[0].Tdiags_data[ii].firstPathAmp2 = 0;
+    	instance_data[0].Tdiags_data[ii].firstPathAmp3 = 0;
+    	instance_data[0].Tdiags_data[ii].maxGrowthCIR = 0;
+    	instance_data[0].Tdiags_data[ii].maxNoise = 0;
+    	instance_data[0].Tdiags_data[ii].rxPreamCount = 0;
+    	instance_data[0].Tdiags_data[ii].stdNoise = 0;
+    }
+#endif
+
+    instance_data[0].RangeBiasCorrection = CORRECT_RANGE_BIAS;
+    instance_data[0].UseUpdatedBiasTable = 0;
+
+    // copy default range bias table
+//ERWIN todo    copyRangeBiasTable();
+    // default correction factor for bias correction
+    instance_data[0].BiasCorrFactor[0] = 763;	// Ch1
+    instance_data[0].BiasCorrFactor[1] = 763;	// Ch2
+    instance_data[0].BiasCorrFactor[2] = 763; 	// Ch3
+    instance_data[0].BiasCorrFactor[3] = 1000;	// Ch4
+    instance_data[0].BiasCorrFactor[4] = 662;	// Ch5
+    instance_data[0].BiasCorrFactor[5] = 1000;	// Ch7
+
+    instance_data[0].antennaType = 0; // default use TREK1000 antenna
+//    for(uint8 ii=0;ii<6;ii++)
+//    {
+//    	instance_data[0].BiasStartPrf16[ii] = -23;
+//    	instance_data[0].BiasStartPrf64[ii] = -17;
+//    }
+//    instance_data[0].BiasStartPrf16[3] = instance_data[0].BiasStartPrf16[5] = -28;
+//    instance_data[0].BiasStartPrf64[3] = instance_data[0].BiasStartPrf64[5] = -30;
+
+    counter = 0;
+    // initialize operation mode, TWR or TOA
+//    instance_data[0].opMode = TWR;
+//    instance_data[0].opMode = TOA;
+    // initialize gateway anchor address for TWR, or anchor sync for TOA
+    instance_data[0].gatewayAnchorAddress = 0x8000;
+//    // initialize mode
+//    instance_data[0].mode =  ANCHOR;                                // assume listener,
+
+    instance_data[0].instToSleep = FALSE;
+
+    uid_read(&instance_data[0].mcuId);
+
+//    instance_data[0].updateLcdOn = 0;
+
+//    instance_data[0].enableReport = 1;
+//    instance_data[0].enableReport = 0;
+//    instance_data[0].getReportReqs = 0;
+//    instance_data[0].getReportResp = 1;
+#if 0 //ERWIN
+    send_tx_buff = 0;
+#endif
+//    // enable USART
+//    usartinit();
+#endif
+    // main loop
+    while(1)
+    {
+#if 0
+    	n = 0;
+        printf("main_loop\n");
+    	if(UpdateSettings) {
+    		dwt_forcetrxoff();	//this will clear all events
+#if 0 //ERWIN
+    		port_DisableEXT_IRQ(); //disable ScenSor IRQ until we configure the device
+#endif
+    		inittestapplication(0);
+#if 0 //ERWIN
+    		port_EnableEXT_IRQ(); //enable ScenSor IRQ before starting
+#endif
+//    		updateUWBsettings();
+//    		// initialize init state
+//    		if(instance_data[0].opMode == TWR)
+//    			instance_data[0].testAppState = TA_INIT ;
+//    		else
+//    			instance_data[0].testAppState = TOA_INIT ;
+#if 0 //ERWIN
+    		led_off(LED_ALL);
+    		command = 0x2 ;  //return cursor home
+    		writetoLCD( 1, 0,  &command);
+    		memset(dataseq, ' ', LCD_BUFF_LEN);
+    		memset(dataseq1, ' ', LCD_BUFF_LEN);
+    		setLCDline1();
+    		command = 0x2 ;  //return cursor home
+    		writetoLCD( 1, 0,  &command);
+    		memset(dataseq1, ' ', LCD_BUFF_LEN);
+#endif
+    		UpdateSettings = 0;
+    	}
+#if 0 //ERWIN
+    	if(send_tx_buff)
+    	{
+    		send_usbmessage(&tx_buff[0], tx_buff_length);
+    		usb_run();
+//    		pauseUsbReports = portGetTickCnt();
+
+//    		DW_VCP_DataTx(tx_buff, tx_buff_length);
+    		send_tx_buff = 0;
+    		for(i=0;i<tx_buff_length;i++)
+    			tx_buff[i] = 0;
+
+    		pauseUsbReports = 0;
+
+//    		asm("NOP"); asm("NOP"); asm("NOP"); asm("NOP"); asm("NOP");
+
+    	}
+#endif
+//    	if(pauseUsbReports>0)
+//    	{
+//    		if(portGetTickCnt()-pauseUsbReports > 20)
+//    			pauseUsbReports = 0;
+//    	}
+
+    	int monitor_local = instance_data[0].monitor ;
+    	txdiff = (portGetTickCnt() - instance_data[0].timeofTx);
+
+    	if(pauseUsbReports == 0 && instance_data[0].opMode == TWR) // TWR mode
+    	{
+    		instance_run_TWR();
+
+
+    		instance_mode = instancegetrole();
+
+    		//if delayed TX scheduled but did not happen after expected time then it has failed... (has to be < slot period)
+    		//if anchor just go into RX and wait for next message from tags/anchors
+    		//if tag handle as a timeout
+    		if((monitor_local == 1) && ( txdiff > instance_data[0].slotPeriod))
+    		{
+    			//        	int an = 0;
+    			//        	uint32 tdly ;
+    			//        	uint32 reg1, reg2;
+
+    			//        	reg1 = dwt_read32bitoffsetreg(0x0f, 0x1);
+    			//        	reg2 = dwt_read32bitoffsetreg(0x019, 0x1);
+    			//        	tdly = dwt_read32bitoffsetreg(0x0a, 0x1);
+    			//        	an = sprintf((char*)&usbVCOMout[0], "T%08x %08x time %08x %08x", (unsigned int) reg2, (unsigned int) reg1,
+    			//        			(unsigned int) dwt_read32bitoffsetreg(0x06, 0x1), (unsigned int) tdly);
+    			//            send_usbmessage(&usbVCOMout[0], an);
+
+    			instance_data[0].wait4ack = 0;
+
+    			if(instance_mode == TAG)
+    			{
+    				inst_processrxtimeout(&instance_data[0]);
+    			}
+    			else //if(instance_mode == ANCHOR)
+    			{
+    				dwt_forcetrxoff();	//this will clear all events
+    				//dwt_rxreset();
+    				//enable the RX
+    				instance_backtoanchor(&instance_data[0]);
+    				dwt_rxenable(DWT_START_RX_IMMEDIATE);
+    				instance_data[0].testAppState = TA_RXE_WAIT ;
+    			}
+    			instance_data[0].monitor = 0;
+    		}
+
+    		rx = (instance_data[0].newRange || instance_data[0].newRangeImRpt);
+//    		rx = instancenewrange() ;
+
+    		//if there is a new ranging report received or a new range has been calculated, then prepare data
+    		//to output over USB - Virtual COM port, and update the LCD
+    		if(rx != TOF_REPORT_NUL)
+    		{
+    			uint16 l = 0;
+    			uint8 r= 0; // l: total number of ranges & r: number of slots counter
+    			//uint16 aaddr, taddr;
+    			//int correction ;
+
+    			//send the new range information to LCD and/or USB
+#if USB_MSG_BINARY == 0
+    			uint16 aaddr;
+    			aaddr = instancenewrangeancadd() & 0xff;
+#endif
+    			uint16 txa, rxa;
+    			txa =  instancetxantdly();
+    			rxa =  instancerxantdly();
+
+    			uint16 taddr;
+    			taddr = instancenewrangetagadd() & 0xff;
+    			rangeTime = instancenewrangetim() & 0xffffffff;
+    			if(instance_data[0].newRangeImRpt)
+    				rangeTime = instance_data[0].newRangeTimeImRpt & 0xffffffff;
+//#if LCD_UPDATE_ON == 1
+    			if(instance_data[0].updateLcdOn && (printLCDTWRReports + lcdUpdatePeriod <= portGetTickCnt()))
+    			{
+#if 0 //ERWIN
+    				//led_on(LED_PC9);
+    				command = 0x2 ;  //return cursor home
+    				writetoLCD( 1, 0,  &command);
+
+    				memset(dataseq1, ' ', LCD_BUFF_LEN);
+    				writetoLCD( 40, 1, dataseq); //send some data
+#endif
+
+    				//anchors will print a range to each tag in sequence with 1 second pause
+    				//they will show the last rage to that tag
+    				if(instance_mode == ANCHOR)
+    				{
+    					int b = 0;
+    					double rangetotag = getTagDist(toggle) ;
+
+    					while(((int) (rangetotag*1000)) == 0) //if 0 then go to next tag
+    					{
+//    						if(b > MAX_TAG_LIST_SIZE)
+//    							break;
+//
+//    						toggle++;
+//    						if(toggle >= MAX_TAG_LIST_SIZE)
+//    							toggle = 0;
+
+    						if(b > instance_data[0].maxTagsTwr)
+    							break;
+
+    						toggle++;
+    						if(toggle >= instance_data[0].maxTagsTwr)
+    							toggle = 0;
+
+    						rangetotag = getTagDist(toggle) ;
+    						b++;
+    					}
+#if 0 //ERWIN
+    					sprintf((char*)&dataseq1[0], "A%d T%d: %3.2f m", ancaddr, toggle, rangetotag);
+    					writetoLCD( 16, 1, dataseq1); //send some data
+#endif
+
+    					toggle++;
+
+//    					if(toggle >= MAX_TAG_LIST_SIZE)
+//    						toggle = 0;
+
+    					if(toggle >= instance_data[0].maxTagsTwr)
+    						toggle = 0;
+    				}
+    				else if(instance_mode == TAG)
+    				{
+#if 0 //ERWIN
+    					sprintf((char*)&dataseq1[0], "T%d A%d: %3.2f m", tagaddr, toggle, instancegetidist(toggle));
+    					//toggle = 1;
+    					writetoLCD( 16, 1, dataseq1); //send some data
+#endif
+
+    					toggle++;
+
+//    					if(toggle >= MAX_ANCHOR_LIST_SIZE)
+//    						toggle = 0;
+
+    					if(toggle >= instance_data[0].maxAnchorsTwr)
+    						toggle = 0;
+    				}
+    				//led_off(LED_PC9);
+
+    				//update the print time
+    				printLCDTWRReports = portGetTickCnt();
+    			}
+//#endif
+    			//led_on(LED_PC9);
+//    			l = instancegetlcount() & 0xFFFF;
+    			l = instance_data[0].longTermRangeCount;
+    			if(instance_mode == TAG)
+    			{
+//    				r = instancegetrnum();
+    				r = instance_data[0].rangeNum;
+    			}
+    			else
+    			{
+    				r = instancegetrnuma(taddr);
+    			}
+
+    			if(instance_data[0].newRange) {
+    				valid = instancevalidranges();
+//    				r = r-1;
+//    				l = l-1;
+    			}
+
+    			if(instance_data[0].newRangeImRpt) {
+    				valid = instance_data[0].rxResponseMaskReportImRpt;
+//    				r = r+1;
+//    				l = l+1;
+    			}
+
+//    			if(l > 254)
+//    				debug++;
+
+    			n = 0;
+    			SysTickCnt = portGetTickCnt();
+
+    			numIterReportRanges = 8*(1 + ((instance_data[0].maxAnchorsTwr-1) >> 3));
+
+//    			if(instance_data[0].getReportResp == 0)
+//    				debug = 1;
+
+//    			if(rx == TOF_REPORT_T2A && instance_data[0].getReportResp)
+//    			if(rx == TOF_REPORT_T2A)
+    			if(rx > 0)
+    			{
+//    				pauseUsbReports = 0;
+    				//correction = instance_data.tagSleepCorrection2;
+//    				if(instance_data[0].enableReport)
+//    					instance_data[0].getReportResp = 0;
+
+    				if(instance_mode == TAG) {
+
+#if USB_MSG_BINARY == 1
+    					uint8 jj = 0;
+    					usbVCOMout[jj++] = 'T';
+    					usbVCOMout[jj++] = 'a';
+    					usbVCOMout[jj++] = 'g';
+    					usbVCOMout[jj++] = ' ';
+    					usbVCOMout[jj++] = taddr;
+    					usbVCOMout[jj++] = (uint8)(rangeTime >> 8);
+    					usbVCOMout[jj++] = (uint8)rangeTime;
+    					usbVCOMout[jj++] = (uint8)(l >> 8);
+    					usbVCOMout[jj++] = (uint8)l;
+    					usbVCOMout[jj++] = (r >> 8);
+    					usbVCOMout[jj++] = (uint8)r;
+    					usbVCOMout[jj++] = (uint8)(valid >> 8);
+    					usbVCOMout[jj++] = (uint8)valid;
+//    					for(uint8 ii=0;ii<MAX_ANCHOR_LIST_SIZE;ii++)
+    					for(uint8 ii=0;ii<numIterReportRanges;ii++)
+    					{
+    						if(instance_data[0].newRange)
+    							DistanceTA_mm[ii] = (int32)(1000*inst_idist[ii]);
+    						else if(instance_data[0].newRangeImRpt)
+    							DistanceTA_mm[ii] = (int32)(1000*inst_idist_ImRpt[ii]);
+
+    						usbVCOMout[jj++] = DistanceTA_mm[ii] >> 24;
+    						usbVCOMout[jj++] = DistanceTA_mm[ii] >> 16;
+    						usbVCOMout[jj++] = DistanceTA_mm[ii] >> 8;
+    						usbVCOMout[jj++] = DistanceTA_mm[ii];
+    					}
+    					numIterReportDiags = 8*(1 + ((instance_data[0].maxAnchorsTwr-1) >> 3));
+	#if ENABLE_DIAGNOSTICS == 1
+//    					for(uint8 ii=0;ii<MAX_ANCHOR_LIST_SIZE;ii++)
+    					for(uint8 ii=0;ii<numIterReportDiags;ii++)
+    					{
+    						usbVCOMout[jj++] = instance_data[0].Adiags_data[ii].firstPathAmp1 >> 8;
+    						usbVCOMout[jj++] = instance_data[0].Adiags_data[ii].firstPathAmp1;
+    						usbVCOMout[jj++] = instance_data[0].Adiags_data[ii].firstPathAmp2 >> 8;
+    						usbVCOMout[jj++] = instance_data[0].Adiags_data[ii].firstPathAmp2;
+    						usbVCOMout[jj++] = instance_data[0].Adiags_data[ii].firstPathAmp3 >> 8;
+    						usbVCOMout[jj++] = instance_data[0].Adiags_data[ii].firstPathAmp3;
+    						usbVCOMout[jj++] = instance_data[0].Adiags_data[ii].maxGrowthCIR >> 8;
+    						usbVCOMout[jj++] = instance_data[0].Adiags_data[ii].maxGrowthCIR;
+    						usbVCOMout[jj++] = instance_data[0].Adiags_data[ii].rxPreamCount >> 8;
+    						usbVCOMout[jj++] = instance_data[0].Adiags_data[ii].rxPreamCount;
+//		#if VERSION == VER_1p0
+    						usbVCOMout[jj++] = instance_data[0].Adiags_data[ii].maxNoise >> 8;
+    						usbVCOMout[jj++] = instance_data[0].Adiags_data[ii].maxNoise;
+    						usbVCOMout[jj++] = instance_data[0].Adiags_data[ii].stdNoise >> 8;
+    						usbVCOMout[jj++] = instance_data[0].Adiags_data[ii].stdNoise;
+    						uint32 FPindex1000 = (uint32)(1000*instance_data[0].Adiags_data[ii].firstPath);
+    						for(uint8 kk = 0;kk<4;kk++)
+    							usbVCOMout[jj++] = FPindex1000 >> (24-kk*8);
+//		#endif
+    					}
+	#endif // ENABLE_DIAGNOSTICS
+
+	#if VERSION == VER_1p0
+    					usbVCOMout[jj++] = txa >> 8;
+    					usbVCOMout[jj++] = txa;
+    					usbVCOMout[jj++] = rxa >> 8;
+    					usbVCOMout[jj++] = rxa;
+    					for(uint8 ii=0;ii<8;ii++)
+    						usbVCOMout[jj++] = instance_data[0].TimestampTx1[0] >> (56-ii*8);
+    					for(uint8 ii=0;ii<8;ii++)
+    						usbVCOMout[jj++] = instance_data[0].TimestampRx1[0] >> (56-ii*8);
+    					for(uint8 ii=0;ii<8;ii++)
+    						usbVCOMout[jj++] = instance_data[0].TimestampTx2[0] >> (56-ii*8);
+    					for(uint8 ii=0;ii<8;ii++)
+    						usbVCOMout[jj++] = instance_data[0].TimestampRx2[0] >> (56-ii*8);
+    					for(uint8 ii=0;ii<8;ii++)
+    						usbVCOMout[jj++] = instance_data[0].TimestampTx3[0] >> (56-ii*8);
+    					for(uint8 ii=0;ii<8;ii++)
+    						usbVCOMout[jj++] = instance_data[0].TimestampRx3[0] >> (56-ii*8);
+	#endif
+
+//            		usbVCOMout[jj++] = instance_data[0].StatusIO1;
+//            		usbVCOMout[jj++] = instance_data[0].StatusIO2;
+//	#if ENABLE_CIR_DATA == 0
+    					usbVCOMout[jj++] = '\r';
+    					usbVCOMout[jj++] = '\n';
+//	#endif
+    					n = jj;
+#else // USB_MSG_BINARY
+	#if VERSION == VER_1p0
+    					n = sprintf((char*)&usbVCOMout[0],
+    							"T%d,%lu,%d,%d,%d,%d,%d,%d,%d,%d,%d,",taddr, SysTickCnt, rangeTime, valid, l, r, txa, rxa, chan, (sw1_prf)? 64:16, prb_len);
+    					for(uint8 ii=0;ii<MAX_ANCHOR_LIST_SIZE;ii++)
+    						n += sprintf((char*)&usbVCOMout[n],	"R%d,%d,%d,", ii, instancegetidist_mm(ii), instancegetidistraw_mm(ii));
+	#else // VERSION
+    					n = sprintf((char*)&usbVCOMout[0],"T%d,%d,%d,",taddr,rangeTime,valid);
+    					for(uint8 ii=0;ii<MAX_ANCHOR_LIST_SIZE;ii++)
+    						n += sprintf((char*)&usbVCOMout[n],	"%d,", instancegetidist_mm(ii));
+	#endif // VERSION
+
+	#if ENABLE_DIAGNOSTICS == 1
+		#if VERSION == VER_1p0
+    					for(uint8 ii=0;ii<MAX_ANCHOR_LIST_SIZE;ii++)
+    						n += sprintf((char*)&usbVCOMout[n], "dA%d,%g,%d,%d,%d,%d,%d,%d,%d,",
+    								ii,
+									instance_data[0].Adiags_data[ii].firstPath,
+									instance_data[0].Adiags_data[ii].firstPathAmp1,
+									instance_data[0].Adiags_data[ii].firstPathAmp2,
+									instance_data[0].Adiags_data[ii].firstPathAmp3,
+									instance_data[0].Adiags_data[ii].maxGrowthCIR,
+									instance_data[0].Adiags_data[ii].maxNoise,
+									instance_data[0].Adiags_data[ii].rxPreamCount,
+									instance_data[0].Adiags_data[ii].stdNoise);
+		#else // VERSION
+    					for(uint8 ii=0;ii<MAX_ANCHOR_LIST_SIZE;ii++)
+    						n += sprintf((char*)&usbVCOMout[n], "%d,%d,%d,%d,%d,",
+    								instance_data[0].Adiags_data[ii].firstPathAmp1,
+									instance_data[0].Adiags_data[ii].firstPathAmp2,
+									instance_data[0].Adiags_data[ii].firstPathAmp3,
+									instance_data[0].Adiags_data[ii].maxGrowthCIR,
+									instance_data[0].Adiags_data[ii].rxPreamCount);
+		#endif // VERSION
+	#endif // ENABLE_DIAGNOSTICS
+	#if ENABLE_CIR_DATA == 0
+    					n += sprintf((char*)&usbVCOMout[n], "\r\n");
+	#endif // ENABLE_CIR_DATA
+#endif // USB_MSG_BINARY
+    				}
+
+    				else // anchor mode
+    				{
+
+#if USB_MSG_BINARY == 1
+    					uint8 jj = 0;
+    					usbVCOMout[jj++] = 'T';
+    					usbVCOMout[jj++] = 'a';
+    					usbVCOMout[jj++] = 'g';
+    					usbVCOMout[jj++] = ' ';
+    					usbVCOMout[jj++] = taddr;
+    					usbVCOMout[jj++] = rangeTime >> 8;
+    					usbVCOMout[jj++] = rangeTime;
+    					usbVCOMout[jj++] = l >> 8;
+    					usbVCOMout[jj++] = l;
+    					usbVCOMout[jj++] = r >> 8;
+    					usbVCOMout[jj++] = r;
+    					usbVCOMout[jj++] = valid >> 8;
+    					usbVCOMout[jj++] = valid;
+//    					for(uint8 ii=0;ii<MAX_ANCHOR_LIST_SIZE;ii++)
+    					for(uint8 ii=0;ii<numIterReportRanges;ii++)
+    					{
+    						DistanceTA_mm[ii] = (int32)(1000*inst_idist[ii]);
+
+    						usbVCOMout[jj++] = DistanceTA_mm[ii] >> 24;
+    						usbVCOMout[jj++] = DistanceTA_mm[ii] >> 16;
+    						usbVCOMout[jj++] = DistanceTA_mm[ii] >> 8;
+    						usbVCOMout[jj++] = DistanceTA_mm[ii];
+    					}
+    					usbVCOMout[jj++] = 'A';
+    					usbVCOMout[jj++] = 'n';
+    					usbVCOMout[jj++] = 'c';
+    					usbVCOMout[jj++] = ' ';
+    					usbVCOMout[jj++] = ancaddr;
+
+    					numIterReportDiags = 8*(1 + ((instance_data[0].maxTagsTwr-1) >> 3));
+	#if ENABLE_DIAGNOSTICS == 1
+//    					for(uint8 ii=0;ii<MAX_TAG_LIST_SIZE;ii++)
+//    					for(uint8 ii=0;ii<numIterReportDiags;ii++)
+//    					{
+    					uint8 ii = taddr % numIterReportDiags;
+    						usbVCOMout[jj++] = instance_data[0].Tdiags_data[ii].firstPathAmp1 >> 8;
+    						usbVCOMout[jj++] = instance_data[0].Tdiags_data[ii].firstPathAmp1;
+    						usbVCOMout[jj++] = instance_data[0].Tdiags_data[ii].firstPathAmp2 >> 8;
+    						usbVCOMout[jj++] = instance_data[0].Tdiags_data[ii].firstPathAmp2;
+    						usbVCOMout[jj++] = instance_data[0].Tdiags_data[ii].firstPathAmp3 >> 8;
+    						usbVCOMout[jj++] = instance_data[0].Tdiags_data[ii].firstPathAmp3;
+    						usbVCOMout[jj++] = instance_data[0].Tdiags_data[ii].maxGrowthCIR >> 8;
+    						usbVCOMout[jj++] = instance_data[0].Tdiags_data[ii].maxGrowthCIR;
+    						usbVCOMout[jj++] = instance_data[0].Tdiags_data[ii].rxPreamCount >> 8;
+    						usbVCOMout[jj++] = instance_data[0].Tdiags_data[ii].rxPreamCount;
+//		#if VERSION == VER_1p0
+    						usbVCOMout[jj++] = instance_data[0].Tdiags_data[ii].maxNoise >> 8;
+    						usbVCOMout[jj++] = instance_data[0].Tdiags_data[ii].maxNoise;
+    						usbVCOMout[jj++] = instance_data[0].Tdiags_data[ii].stdNoise >> 8;
+    						usbVCOMout[jj++] = instance_data[0].Tdiags_data[ii].stdNoise;
+    						uint32 FPindex1000 = (uint32)(1000*instance_data[0].Tdiags_data[ii].firstPath);
+    						for(uint8 kk = 0;kk<4;kk++)
+    							usbVCOMout[jj++] = FPindex1000 >> (24-kk*8);
+//		#endif
+
+//    					}
+	#endif // ENABLE_DIAGNOSTICS
+//    						usbVCOMout[jj++] = txa >> 8;
+//    						usbVCOMout[jj++] = txa;
+//    						usbVCOMout[jj++] = rxa >> 8;
+//    						usbVCOMout[jj++] = rxa;
+    						for(uint8 ii=0;ii<8;ii++)
+    							usbVCOMout[jj++] = instance_data[0].TimestampTx1[0] >> (56-ii*8);
+    						for(uint8 ii=0;ii<8;ii++)
+    							usbVCOMout[jj++] = instance_data[0].TimestampRx1[0] >> (56-ii*8);
+    						for(uint8 ii=0;ii<8;ii++)
+    							usbVCOMout[jj++] = instance_data[0].TimestampTx2[0] >> (56-ii*8);
+    						for(uint8 ii=0;ii<8;ii++)
+    							usbVCOMout[jj++] = instance_data[0].TimestampRx2[0] >> (56-ii*8);
+    						for(uint8 ii=0;ii<8;ii++)
+    							usbVCOMout[jj++] = instance_data[0].TimestampTx3[0] >> (56-ii*8);
+    						for(uint8 ii=0;ii<8;ii++)
+    							usbVCOMout[jj++] = instance_data[0].TimestampRx3[0] >> (56-ii*8);
+
+	#if VERSION == VER_1p0
+    					usbVCOMout[jj++] = txa >> 8;
+    					usbVCOMout[jj++] = txa;
+    					usbVCOMout[jj++] = rxa >> 8;
+    					usbVCOMout[jj++] = rxa;
+    					for(uint8 ii=0;ii<8;ii++)
+    						usbVCOMout[jj++] = instance_data[0].TimestampTx1[0] >> (56-ii*8);
+    					for(uint8 ii=0;ii<8;ii++)
+    						usbVCOMout[jj++] = instance_data[0].TimestampRx1[0] >> (56-ii*8);
+    					for(uint8 ii=0;ii<8;ii++)
+    						usbVCOMout[jj++] = instance_data[0].TimestampTx2[0] >> (56-ii*8);
+    					for(uint8 ii=0;ii<8;ii++)
+    						usbVCOMout[jj++] = instance_data[0].TimestampRx2[0] >> (56-ii*8);
+    					for(uint8 ii=0;ii<8;ii++)
+    						usbVCOMout[jj++] = instance_data[0].TimestampTx3[0] >> (56-ii*8);
+    					for(uint8 ii=0;ii<8;ii++)
+    						usbVCOMout[jj++] = instance_data[0].TimestampRx3[0] >> (56-ii*8);
+	#endif
+
+//            		usbVCOMout[jj++] = instance_data[0].StatusIO1;
+//            		usbVCOMout[jj++] = instance_data[0].StatusIO2;
+//	#if ENABLE_CIR_DATA == 0
+
+    					usbVCOMout[jj++] = '\r';
+    					usbVCOMout[jj++] = '\n';
+//	#endif
+    					n = jj;
+#else // USB_MSG_BINARY
+	#if VERSION == VER_1p0
+    					n = sprintf((char*)&usbVCOMout[0],
+    							"T%d,%lu,%d,%d,%d,%d,%d,%d,%d,%d,%d,", taddr, SysTickCnt, rangeTime, valid, l, r, txa, rxa, chan, (sw1_prf)? 64:16, prb_len);
+    					for(uint8 ii=0;ii<MAX_ANCHOR_LIST_SIZE;ii++)
+    						n += sprintf((char*)&usbVCOMout[n],	"R%d,%d,%d,", ii, instancegetidist_mm(ii), instancegetidistraw_mm(ii));
+	#else // VERSION
+    					n = sprintf((char*)&usbVCOMout[0],"T%d,%d,%d,",taddr,rangeTime,valid);
+    					for(uint8 ii=0;ii<MAX_ANCHOR_LIST_SIZE;ii++)
+    						n += sprintf((char*)&usbVCOMout[n],	"%d,", instancegetidist_mm(ii));
+	#endif // VERSION
+
+	#if ENABLE_DIAGNOSTICS == 1
+		#if VERSION == VER_1p0
+    					for(uint8 ii=0;ii<MAX_TAG_LIST_SIZE;ii++)
+    						n += sprintf((char*)&usbVCOMout[n], "dT%d,%g,%d,%d,%d,%d,%d,%d,%d,",
+    								taddr,
+									instance_data[0].Tdiags_data[taddr].firstPath,
+									instance_data[0].Tdiags_data[taddr].firstPathAmp1,
+									instance_data[0].Tdiags_data[taddr].firstPathAmp2,
+									instance_data[0].Tdiags_data[taddr].firstPathAmp3,
+									instance_data[0].Tdiags_data[taddr].maxGrowthCIR,
+									instance_data[0].Tdiags_data[taddr].maxNoise,
+									instance_data[0].Tdiags_data[taddr].rxPreamCount,
+									instance_data[0].Tdiags_data[taddr].stdNoise);
+		#else // VERSION
+    					for(uint8 ii=0;ii<MAX_TAG_LIST_SIZE;ii++)
+    						n += sprintf((char*)&usbVCOMout[n], "%d,%d,%d,%d,%d,",
+    								instance_data[0].Tdiags_data[ii].firstPathAmp1,
+									instance_data[0].Tdiags_data[ii].firstPathAmp2,
+									instance_data[0].Tdiags_data[ii].firstPathAmp3,
+									instance_data[0].Tdiags_data[ii].maxGrowthCIR,
+									instance_data[0].Tdiags_data[ii].rxPreamCount);
+		#endif // VERSION
+	#endif // ENABLE_DIAGNOSTICS
+	#if ENABLE_CIR_DATA == 0
+    					n += sprintf((char*)&usbVCOMout[n], "\r\n");
+	#endif // ENABLE_CIR_DATA
+#endif // USB_MSG_BINARY
+    				}
+    			}
+//            else //anchor to anchor ranging
+//            {
+//            	n = sprintf((char*)&usbVCOMout[0], "ma %02x %08x %08x %08x %08x %04x %02x %08x a0:%d\r\n",
+//														valid, instancegetidist_mm(0), instancegetidist_mm(1),
+//														instancegetidist_mm(2), instancegetidist_mm(3),
+//														l, instancegetrnumanc(0), rangeTime, aaddr);
+//            }
+    			//led_off(LED_PC9);
+    			// clear ranges table
+    			if(instance_data[0].newRange)
+    			{
+    				instance_data[0].newRange = 0;
+    				instancecleardisttableall();
+    			}
+
+    			if(instance_data[0].newRangeImRpt)
+    			{
+    				instance_data[0].newRangeImRpt = 0;
+    				instancecleardisttableall_ImRpt();
+    			}
+
+//    			instancecleardisttableall();
+    			// clear diagnostics data
+#if ENABLE_DIAGNOSTICS == 1
+//    			for(uint8 ii=0;ii<MAX_ANCHOR_LIST_SIZE;ii++)
+    			for(uint8 ii=0;ii<MAX_BUFF_SIZE;ii++)
+    			{
+    				instance_data[0].Adiags_data[ii].firstPath = 0;
+    				instance_data[0].Adiags_data[ii].firstPathAmp1 = 0;
+    				instance_data[0].Adiags_data[ii].firstPathAmp2 = 0;
+    				instance_data[0].Adiags_data[ii].firstPathAmp3 = 0;
+    				instance_data[0].Adiags_data[ii].maxGrowthCIR = 0;
+    				instance_data[0].Adiags_data[ii].maxNoise = 0;
+    				instance_data[0].Adiags_data[ii].rxPreamCount = 0;
+    				instance_data[0].Adiags_data[ii].stdNoise = 0;
+    			}
+//    			for(uint8 ii=0;ii<MAX_TAG_LIST_SIZE;ii++)
+    			for(uint8 ii=0;ii<MAX_BUFF_SIZE;ii++)
+    			{
+    				instance_data[0].Tdiags_data[ii].firstPath = 0;
+    				instance_data[0].Tdiags_data[ii].firstPathAmp1 = 0;
+    				instance_data[0].Tdiags_data[ii].firstPathAmp2 = 0;
+    				instance_data[0].Tdiags_data[ii].firstPathAmp3 = 0;
+    				instance_data[0].Tdiags_data[ii].maxGrowthCIR = 0;
+    				instance_data[0].Tdiags_data[ii].maxNoise = 0;
+    				instance_data[0].Tdiags_data[ii].rxPreamCount = 0;
+    				instance_data[0].Tdiags_data[ii].stdNoise = 0;
+    			}
+#endif
+    		} //if new range present
+
+    		if(n > 0 && pauseUsbReports == 0)
+    		{
+#if 0 //ERWIN
+    			send_usbmessage(&usbVCOMout[0], n);
+    			usb_run();
+#endif
+#if ENABLE_CIR_DATA == 1
+    			if(instance_data[0].enableCirData && instance_data[0].mode != TAG)
+    				sendCIRdata();
+#endif
+    		}
+    		n = 0;
+    	}
+    	else if(pauseUsbReports == 0 && instance_data[0].opMode == TOA) // TOA mode
+    	{
+    		instance_run_TOA();
+
+//    		uint8 ll;
+
+#if 0 //ERWIN
+    		if(instance_data[0].updateLcdOn && (printLCDTWRReports + lcdUpdatePeriod <= portGetTickCnt()))
+    		{
+    			//led_on(LED_PC9);
+    			command = 0x2 ;  //return cursor home
+    			writetoLCD( 1, 0,  &command);
+
+    			memset(dataseq1, ' ', LCD_BUFF_LEN);
+    			writetoLCD( 40, 1, dataseq); //send some data
+
+    			//anchors will print a range to each tag in sequence with 1 second pause
+    			//they will show the last rage to that tag
+    			if(instance_mode == ANCHOR || instance_mode == ANCHOR_SYNC)
+    			{
+    				for(uint8 ll=0;ll<MAX_BUFF_SIZE;ll++)
+    				{
+    					if(instance_data[0].NewBlinkData[ll] == 1)
+    					{
+    						int tagaddr = instance_data[0].TagIdBlinkArray[ll];
+    						int diffTimestamp = (int)instance_data[0].diffRxTimestamp[ll];
+    						sprintf((char*)&dataseq1[0], "A%d T%d: %d", ancaddr, tagaddr, diffTimestamp);
+    						writetoLCD( 16, 1, dataseq1); //send some data
+    					}
+    				}
+//    				int b = 0;
+//    				int diffTimestamp = (int)instance_data[0].diffRxTimestamp[toggle] ;
+//
+//    				while(((int) (diffTimestamp)) == 0) //if 0 then go to next tag
+//    				{
+//    					if(b > instance_data[0].maxSupportedTagTOA)
+//    						break;
+//
+//    					toggle++;
+//
+//    					if(toggle >= instance_data[0].maxSupportedTagTOA)
+//    						toggle = 0;
+//    					if(instance_data[0].NewBlinkData[toggle % MAX_BUFF_SIZE] == 1)
+//    						diffTimestamp = (int)instance_data[0].diffRxTimestamp[toggle % MAX_BUFF_SIZE] ;
+//    					b++;
+//    				}
+
+//    				sprintf((char*)&dataseq1[0], "ToA A%d T%d: %d", ancaddr, toggle, diffTimestamp);
+//    				sprintf((char*)&dataseq1[0], "A%d T%d: %d", ancaddr, instance_data[0].TagIdBlinkArray[toggle % MAX_BUFF_SIZE], diffTimestamp);
+//    				writetoLCD( 16, 1, dataseq1); //send some data
+
+//    				toggle++;
+//
+//    				if(toggle >= instance_data[0].maxSupportedTagTOA)
+//    					toggle = 0;
+    			}
+    			else if(instance_mode == TAG)
+    			{
+//    				sprintf((char*)&dataseq1[0], "ToA T%d A0: %d", tagaddr, (int)instance_data[0].diffTimestampTag[0]);
+    				sprintf((char*)&dataseq1[0], "T%d: %d", tagaddr, (int)instance_data[0].diffTimestampTag[0]);
+    				//toggle = 1;
+    				writetoLCD( 16, 1, dataseq1); //send some data
+
+//    				toggle++;
+//
+//    				if(toggle >= instance_data[0].maxAnchorsTwr)
+//    					toggle = 0;
+    			}
+    			//led_off(LED_PC9);
+
+    			//update the print time
+    			printLCDTWRReports = portGetTickCnt();
+    		}
+#endif
+    		for(uint8 ll=0;ll<MAX_BUFF_SIZE;ll++)
+    		{
+    			if(instance_data[0].NewBlinkData[ll] == 1) // send data via usb
+    			{
+    				rangeTime = instance_data[0].toaEvtTime[ll];
+    				uint8 jj = 0;
+    				usbVCOMout[jj++] = 'T';
+    				usbVCOMout[jj++] = 'a';
+    				usbVCOMout[jj++] = 'g';
+    				usbVCOMout[jj++] = ' ';
+    				usbVCOMout[jj++] = instance_data[0].TagIdBlinkArray[ll]; // Tag Id
+    				usbVCOMout[jj++] = instance_data[0].instanceAddress16 & 0xFF; // Anchor Id (LSB)
+    				usbVCOMout[jj++] = rangeTime >> 8;
+    				usbVCOMout[jj++] = rangeTime;
+    				usbVCOMout[jj++] = instance_data[0].SeqNumBlink[ll] >> 8;
+    				usbVCOMout[jj++] = instance_data[0].SeqNumBlink[ll];
+    				for(uint8 ii=0;ii<8;ii++)
+    					usbVCOMout[jj++] = instance_data[0].syncRxTimestamp[ll] >> (56-ii*8);
+    				for(uint8 ii=0;ii<8;ii++)
+    					usbVCOMout[jj++] = instance_data[0].blinkRxTimestamp[ll] >> (56-ii*8);
+    				for(uint8 ii=0;ii<8;ii++)
+    					usbVCOMout[jj++] = instance_data[0].diffRxTimestamp[ll] >> (56-ii*8);
+    				for(uint8 ii=0;ii<8;ii++)
+    					usbVCOMout[jj++] = instance_data[0].diffTimestampTag[ll] >> (56-ii*8);
+#if ENABLE_DIAGNOSTICS == 1
+    				usbVCOMout[jj++] = instance_data[0].Tdiags_data[ll].firstPathAmp1 >> 8;
+    				usbVCOMout[jj++] = instance_data[0].Tdiags_data[ll].firstPathAmp1;
+    				usbVCOMout[jj++] = instance_data[0].Tdiags_data[ll].firstPathAmp2 >> 8;
+    				usbVCOMout[jj++] = instance_data[0].Tdiags_data[ll].firstPathAmp2;
+    				usbVCOMout[jj++] = instance_data[0].Tdiags_data[ll].firstPathAmp3 >> 8;
+    				usbVCOMout[jj++] = instance_data[0].Tdiags_data[ll].firstPathAmp3;
+    				usbVCOMout[jj++] = instance_data[0].Tdiags_data[ll].maxGrowthCIR >> 8;
+    				usbVCOMout[jj++] = instance_data[0].Tdiags_data[ll].maxGrowthCIR;
+    				usbVCOMout[jj++] = instance_data[0].Tdiags_data[ll].rxPreamCount >> 8;
+    				usbVCOMout[jj++] = instance_data[0].Tdiags_data[ll].rxPreamCount;
+    				usbVCOMout[jj++] = instance_data[0].Tdiags_data[ll].maxNoise >> 8;
+    				usbVCOMout[jj++] = instance_data[0].Tdiags_data[ll].maxNoise;
+    				usbVCOMout[jj++] = instance_data[0].Tdiags_data[ll].stdNoise >> 8;
+    				usbVCOMout[jj++] = instance_data[0].Tdiags_data[ll].stdNoise;
+    				uint32 FPindex1000 = (uint32)(1000*instance_data[0].Tdiags_data[ll].firstPath);
+    				for(uint8 kk = 0;kk<4;kk++)
+    					usbVCOMout[jj++] = FPindex1000 >> (24-kk*8);
+#endif
+//#if ENABLE_CIR_DATA == 0
+    				usbVCOMout[jj++] = '\r';
+    				usbVCOMout[jj++] = '\n';
+//#endif
+    				n = jj;
+
+    				// indicate that data has been copied to USB buffer
+    				instance_data[0].NewBlinkData[ll] = 0;
+
+    			// clear diagnostics data
+//    			for(uint8 ii=0;ii<MAX_TAG_LIST_SIZE;ii++)
+//    			{
+    				instance_data[0].Tdiags_data[ll].firstPath = 0;
+    				instance_data[0].Tdiags_data[ll].firstPathAmp1 = 0;
+    				instance_data[0].Tdiags_data[ll].firstPathAmp2 = 0;
+    				instance_data[0].Tdiags_data[ll].firstPathAmp3 = 0;
+    				instance_data[0].Tdiags_data[ll].maxGrowthCIR = 0;
+    				instance_data[0].Tdiags_data[ll].maxNoise = 0;
+    				instance_data[0].Tdiags_data[ll].rxPreamCount = 0;
+    				instance_data[0].Tdiags_data[ll].stdNoise = 0;
+//    			}
+
+    			}
+    			if(n > 0 && pauseUsbReports == 0)
+    			{
+#if 0 //ERWIN
+    				send_usbmessage(&usbVCOMout[0], n);
+    				usb_run();
+#endif
+#if ENABLE_CIR_DATA == 1
+//    				if(instance_data[0].enableCirData && instance_data[0].mode != TAG)
+    				if(instance_data[0].enableCirData)
+    					sendCIRdata();
+#endif
+    			}
+    			n = 0;
+    		}
+    	}
+
+//    		if(n > 0)
+//    		{
+//    			if(pauseTWRReports == 0)
+//    			{
+////       			if(counter >= 100 && instance_mode == ANCHOR)
+////       			{
+//    				send_usbmessage(&usbVCOMout[0], n);
+//    				usb_run();
+////       			}
+////       			counter++;
+//#if ENABLE_CIR_DATA == 1
+//    				uint16 m, ii,jj,kk;
+//
+//    				asm("NOP"); asm("NOP"); asm("NOP");
+//
+//    				dwt_readaccdata(&instance_data[0].CIRdata[0], 2033, 0);
+//    				m = 0;
+//    				for(jj=0;jj<4;jj++)
+//    				{
+////       				m = 0;
+//	#if USB_MSG_BINARY == 0
+//    					m = 0;
+//    					if(jj == 0)
+//    						m += sprintf((char*)&usbVCOM_CIR[m], "CIR,");
+//	#endif
+//
+//    					ii = 1;
+//    					for(kk=0;kk<127;kk++)
+//    					{
+//    						CIR_real[kk+127*jj] = (int16)((uint16)instance_data[0].CIRdata[ii+0+508*jj] |
+//    								(((uint16)instance_data[0].CIRdata[ii+1+508*jj]) << 8));
+//
+//    						CIR_imag[kk+127*jj] = (int16)((uint16)instance_data[0].CIRdata[ii+2+508*jj] |
+//    								(((uint16)instance_data[0].CIRdata[ii+3+508*jj]) << 8));
+//    						ii += 4;
+//	#if USB_MSG_BINARY == 1
+//    						usbVCOM_CIR[m++] = CIR_real[kk+127*jj] >> 8;
+//    						usbVCOM_CIR[m++] = CIR_real[kk+127*jj];
+//    						usbVCOM_CIR[m++] = CIR_imag[kk+127*jj] >> 8;
+//    						usbVCOM_CIR[m++] = CIR_imag[kk+127*jj];
+//	#else
+//    						m += sprintf((char*)&usbVCOM_CIR[m], "%i,%i,", CIR_real[kk+127*jj],CIR_imag[kk+127*jj]);
+//	#endif
+//    					}
+//
+//	#if USB_MSG_BINARY == 0
+//    					n = m;
+//    					send_usbmessage(&usbVCOM_CIR[0], n);
+//    					usb_run();
+//    					asm("NOP"); asm("NOP"); asm("NOP");
+//	#endif
+//    				}
+////	#if USB_MSG_BINARY == 1
+////       			n = m;
+////       			send_usbmessage(&usbVCOM_CIR[0], n);
+////       			usb_run();
+////       			asm("NOP"); asm("NOP"); asm("NOP");
+////	#endif
+//
+//    				dwt_readaccdata(&instance_data[0].CIRdata[0], 2033, 2032);
+////       			m = 0;
+//    				for(jj=0;jj<4;jj++)
+//    				{
+////       				m = 0;
+//	#if USB_MSG_BINARY == 0
+//    					m = 0;
+//	#endif
+//    					ii = 1;
+//    					for(kk=0;kk<127;kk++)
+//    					{
+//    						CIR_real[508+kk+127*jj] = (int16)((uint16)instance_data[0].CIRdata[ii+0+508*jj] |
+//    								(((uint16)instance_data[0].CIRdata[ii+1+508*jj]) << 8));
+//
+//    						CIR_imag[508+kk+127*jj] = (int16)((uint16)instance_data[0].CIRdata[ii+2+508*jj] |
+//    								(((uint16)instance_data[0].CIRdata[ii+3+508*jj]) << 8));
+//    						ii += 4;
+//	#if USB_MSG_BINARY == 1
+//    						usbVCOM_CIR[m++] = CIR_real[508+kk+127*jj] >> 8;
+//    						usbVCOM_CIR[m++] = CIR_real[508+kk+127*jj];
+//    						usbVCOM_CIR[m++] = CIR_imag[508+kk+127*jj] >> 8;
+//    						usbVCOM_CIR[m++] = CIR_imag[508+kk+127*jj];
+//	#else
+//    						m += sprintf((char*)&usbVCOM_CIR[m], "%i,%i,", CIR_real[508+kk+127*jj],CIR_imag[508+kk+127*jj]);
+//	#endif
+//    					}
+//
+//    					if(jj == 3) {
+//	#if USB_MSG_BINARY == 0
+//    						m += sprintf((char*)&usbVCOM_CIR[m], "\r\n");
+//	#endif
+//    					}
+//	#if USB_MSG_BINARY == 0
+//    					n = m;
+//    					send_usbmessage(&usbVCOM_CIR[0], n);
+//    					usb_run();
+//    					asm("NOP"); asm("NOP"); asm("NOP");
+//	#endif
+//    				}
+//	#if USB_MSG_BINARY == 1
+//    				usbVCOM_CIR[m++] = 0x80;
+//    				usbVCOM_CIR[m++] = 0x80;
+//    				usbVCOM_CIR[m++] = 0x80;
+//    				usbVCOM_CIR[m++] = 0x80;
+//    				n = m;
+//    				send_usbmessage(&usbVCOM_CIR[0], n);
+//    				usb_run();
+//    				asm("NOP"); asm("NOP"); asm("NOP");
+//	#endif
+//
+//#endif // ENABLE_CIR_DATA
+//    			}
+//    			else
+//    			{
+//    				if(pauseTWRReports + 1000 <= portGetTickCnt())
+//    				{
+//    					pauseTWRReports = 0;
+//    				}
+//    			}
+//    		}
+
+
+
+
+        //led_on(LED_PC7);
+//        usb_run();
+        //led_off(LED_PC7);
+#endif
+      /* Delay a task for a given number of ticks */
+      vTaskDelay(MAIN_TASK_DELAY);
+      /* Tasks must be implemented to never return... */
+    }
+
+
+}
 
 int main(void)
 {
-#if 0 //ERWIN ORG example
+  /*Initialization UART*/
+  boUART_Init ();
+
   /* Setup some LEDs for debug Green and Blue on DWM1001-DEV */
   LEDS_CONFIGURE(BSP_LED_0_MASK | BSP_LED_1_MASK | BSP_LED_2_MASK);
   LEDS_ON(BSP_LED_0_MASK | BSP_LED_1_MASK | BSP_LED_2_MASK );
 
   #ifdef USE_FREERTOS
     /* Create task for LED0 blinking with priority set to 2 */
-    UNUSED_VARIABLE(xTaskCreate(led_toggle_task_function, "LED0", configMINIMAL_STACK_SIZE + 200, NULL, 2, &led_toggle_task_handle));
+    UNUSED_VARIABLE(xTaskCreate(led_toggle_task_function, "LED0", configMINIMAL_STACK_SIZE, NULL, 1, &led_toggle_task_handle));
 
-    /* Start timer for LED1 blinking */
-    led_toggle_timer_handle = xTimerCreate( "LED1", TIMER_PERIOD, pdTRUE, NULL, led_toggle_timer_callback);
-    UNUSED_VARIABLE(xTimerStart(led_toggle_timer_handle, 0));
+    /* Create task for the buzzer */
+    UNUSED_VARIABLE(xTaskCreate(buzzer_task_function, "BUZZER", configMINIMAL_STACK_SIZE, NULL, 2, &buzzer_task_handle));
 
-    /* Create task for SS TWR Initiator set to 2 */
-    UNUSED_VARIABLE(xTaskCreate(ss_initiator_task_function, "SSTWR_INIT", configMINIMAL_STACK_SIZE + 200, NULL, 2, &ss_initiator_task_handle));
-  #endif // #ifdef USE_FREERTOS
-  
-  //-------------dw1000  ini------------------------------------	
-
-  /* Setup DW1000 IRQ pin */  
-  nrf_gpio_cfg_input(DW1000_IRQ, NRF_GPIO_PIN_NOPULL); 		//irq
-  
-  /*Initialization UART*/
-  boUART_Init ();
-  printf("Singled Sided Two Way Ranging Initiator Example \r\n");
-  
-  /* Reset DW1000 */
-  reset_DW1000(); 
-
-  /* Set SPI clock to 2MHz */
-  port_set_dw1000_slowrate();			
-  
-  /* Init the DW1000 */
-  if (dwt_initialise(DWT_LOADUCODE) == DWT_ERROR)
-  {
-    //Init of DW1000 Failed
-    while (1) {};
-  }
-
-  // Set SPI to 8MHz clock
-  port_set_dw1000_fastrate();
-
-  /* Configure DW1000. */
-  dwt_configure(&config);
-
-  /* Apply default antenna delay value. See NOTE 2 below. */
-  dwt_setrxantennadelay(RX_ANT_DLY);
-  dwt_settxantennadelay(TX_ANT_DLY);
-
-  /* Set preamble timeout for expected frames. See NOTE 3 below. */
-  //dwt_setpreambledetecttimeout(0); // PRE_TIMEOUT
-          
-  /* Set expected response's delay and timeout. 
-  * As this example only handles one incoming frame with always the same delay and timeout, those values can be set here once for all. */
-  dwt_setrxaftertxdelay(POLL_TX_TO_RESP_RX_DLY_UUS);
-  dwt_setrxtimeout(65000); // Maximum value timeout with DW1000 is 65ms  
-
-  //-------------dw1000  ini------end---------------------------	
-  // IF WE GET HERE THEN THE LEDS WILL BLINK
+    /* Create task for the main loop */
+    UNUSED_VARIABLE(xTaskCreate(main_task_function, "MAIN LOOP", configMINIMAL_STACK_SIZE + 2000, NULL, 3, &main_task_handle)); //Low priority numbers denote low priority tasks.
+  #endif
 
   #ifdef USE_FREERTOS		
     /* Start FreeRTOS scheduler. */
     vTaskStartScheduler();	
 
     while(1) 
-    {};
+    {
+    };
   #else
 
     // No RTOS task here so just call the main loop here.
     // Loop forever responding to ranging requests.
     while (1)
     {
-      ss_init_run();
-    }
-
-  #endif
-#else
-
-  /*Initialization UART*/
-  boUART_Init ();
-
-  /* Setup some LEDs for debug Green and Blue on DWM1001-DEV */
-  LEDS_CONFIGURE(BSP_LED_0_MASK | BSP_LED_1_MASK | BSP_LED_2_MASK);
-  LEDS_ON(BSP_LED_0_MASK | BSP_LED_1_MASK | BSP_LED_2_MASK );
-
-  #ifdef USE_FREERTOS
-    /* Create task for LED0 blinking with priority set to 2 */
-    UNUSED_VARIABLE(xTaskCreate(led_toggle_task_function, "LED0", configMINIMAL_STACK_SIZE + 200, NULL, 2, &led_toggle_task_handle));
-
-    /* Create task for the buzzer */
-    UNUSED_VARIABLE(xTaskCreate(ss_buzzer_task_function, "BUZZER", configMINIMAL_STACK_SIZE + 200, NULL, 2, &ss_buzzer_task_function));
-  #endif
-
-    #ifdef USE_FREERTOS		
-    /* Start FreeRTOS scheduler. */
-    vTaskStartScheduler();	
-
-    while(1) 
-    {};
-  #else
-
-    // No RTOS task here so just call the main loop here.
-    // Loop forever responding to ranging requests.
-    while (1)
-    {
-      //ss_init_run();
+      //main_task_function();
     }
 
   #endif
 
-#endif
+}
+
+//someone needs to define it
+
+unsigned long portGetTickCnt(void)
+{
+  return xTaskGetTickCount();
 }
 
 /*****************************************************************************************************************************************************

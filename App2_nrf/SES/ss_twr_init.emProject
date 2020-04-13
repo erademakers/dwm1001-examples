@@ -86,6 +86,7 @@
       <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/deca_driver/deca_device.c" />
       <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/deca_driver/deca_params_init.c" />
       <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/deca_driver/port/port_platform.c" />
+      <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/deca_driver/deca_range_tables.c" />
     </folder>
     <folder Name="Freertos">
       <file file_name="/media/erwin/Data/workspace/git/dwm1001-examples/nRF5_SDK_14.2.0/external/freertos/source/croutine.c" />

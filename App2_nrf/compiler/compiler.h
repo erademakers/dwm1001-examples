@@ -26,9 +26,10 @@ extern "C" {
 #include <math.h>
 #include <time.h>
 #include <assert.h>
+#include "nrf_delay.h" //ERWIN
 
 #ifdef __GNUC__
-//ERWIN #include <unistd.h>
+//#include <unistd.h>
 #include <stdbool.h>
 #ifndef __cplusplus
 #ifndef TRUE
@@ -41,7 +42,7 @@ extern "C" {
 #include <sys/stat.h>
 #include <sys/time.h>
 //ERWIN #include <sys/times.h>
-//#define Sleep(x)            usleep((x*1000))
+#define Sleep(x)            (nrf_delay_ms(x)) //ERWIN usleep not available in nrf
 #define __align4            __attribute__((aligned (4)))
 #define __weak              __attribute__((weak))
 #ifndef __always_inline

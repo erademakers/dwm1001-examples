@@ -38,6 +38,7 @@
 "Output/App2_nrf nrf52832_xxaa/Obj/deca_device.o"
 "Output/App2_nrf nrf52832_xxaa/Obj/deca_params_init.o"
 "Output/App2_nrf nrf52832_xxaa/Obj/port_platform.o"
+"Output/App2_nrf nrf52832_xxaa/Obj/deca_range_tables.o"
 "Output/App2_nrf nrf52832_xxaa/Obj/croutine.o"
 "Output/App2_nrf nrf52832_xxaa/Obj/event_groups.o"
 "Output/App2_nrf nrf52832_xxaa/Obj/list.o"
